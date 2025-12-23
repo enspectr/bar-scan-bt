@@ -29,7 +29,7 @@ static bool scan_inited;
 // #define DUMP_HEX
 
 #define DEV_NAME          "EScan"
-#define DEV_NAME_SUFF_LEN 4
+#define DEV_NAME_SUFF_LEN 6
 
 static BleKeyboard bleKeyboard;
 
@@ -60,6 +60,7 @@ void setup()
 	}
 #endif
 	bleKeyboard.set_device_name(bt_dev_name);
+	bleKeyboard.begin();
 }
 
 static bool readBtn(void)
