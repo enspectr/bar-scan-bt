@@ -9,7 +9,7 @@
 #include <esp_bt.h>
 
 // Comment it out to keep default power level
-#define TX_PW_BOOST ESP_PWR_LVL_P15
+#define TX_PW_BOOST ESP_PWR_LVL_P18
 
 #define BTN_PIN 0
 #define BTN_DEBOUNCE_TOUT 50
