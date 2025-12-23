@@ -28,19 +28,13 @@ static bool scan_inited;
 
 // #define DUMP_HEX
 
-#define DEV_NAME          "EScan"
-#define DEV_NAME_SUFF_LEN 6
+#define DEV_NAME "EScan"
 
-static BleKeyboard bleKeyboard;
+static BleKeyboard bleKeyboard(DEV_NAME);
 
 static inline char hex_digit(uint8_t v)
 {
     return v < 10 ? '0' + v : 'A' + v - 10;
-}
-
-static inline char byte_signature(uint8_t v)
-{
-    return hex_digit((v & 0xf) ^ (v >> 4));
 }
 
 void setup()
@@ -51,15 +45,19 @@ void setup()
 
 	pinMode(BTN_PIN, INPUT_PULLUP);
 
-	std::string bt_dev_name(DEV_NAME);
-#ifdef DEV_NAME_SUFF_LEN
 	uint8_t mac[8] = {0};
-	if (ESP_OK == esp_efuse_mac_get_default(mac)) {
-		for (int i = 0; i < DEV_NAME_SUFF_LEN && i < sizeof(mac); ++i)
-			bt_dev_name += byte_signature(mac[i]);
+	if (ESP_OK == esp_efuse_mac_get_default(mac))
+	{
+		std::string bt_dev_name(DEV_NAME);
+		uint8_t sig[] = {(uint8_t)(mac[0] ^ mac[3]), (uint8_t)(mac[1] ^ mac[4]), (uint8_t)(mac[2] ^ mac[5])};
+		bt_dev_name += hex_digit(sig[0] >> 4);
+		bt_dev_name += hex_digit(sig[0] & 0xf);
+		bt_dev_name += hex_digit(sig[1] >> 4);
+		bt_dev_name += hex_digit(sig[1] & 0xf);
+		bt_dev_name += hex_digit(sig[2] >> 4);
+		bt_dev_name += hex_digit(sig[2] & 0xf);
+		bleKeyboard.set_device_name(bt_dev_name);
 	}
-#endif
-	bleKeyboard.set_device_name(bt_dev_name);
 	bleKeyboard.begin();
 }
 
