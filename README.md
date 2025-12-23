@@ -38,7 +38,16 @@ After switching to host mode the scanner stops continuous scan. Use button on th
 
 ## Testing
 
+The adapter presents scanner as BT keyboard with name started with **EScan** followed by a unique suffix made up of 6 hexadecimal digits.
+Once scanned, the code will be entered using this virtual keyboard at the place where the input focus is currently located.
+To check how it works one may scan the following figure and compare result with the code at the bottom of the figure.
+
+<p align="center">
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/test_qrcode.jpg" />
+</p>
+
 ## Power consumption
+
 Total consumption from 5V source together with GM67 module is 60mA in idle state, 240mA while scanning.
 
 ## Troubleshooting
