@@ -6,6 +6,10 @@
 
 #include <BleKeyboard.h>
 #include <esp_mac.h>
+#include <esp_bt.h>
+
+// Comment it out to keep default power level
+#define TX_PW_BOOST ESP_PWR_LVL_P15
 
 #define BTN_PIN 0
 #define BTN_DEBOUNCE_TOUT 50
@@ -58,6 +62,11 @@ void setup()
 		bleKeyboard.set_device_name(bt_dev_name);
 	}
 	bleKeyboard.begin();
+#ifdef TX_PW_BOOST
+	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, TX_PW_BOOST);
+	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV,     TX_PW_BOOST);
+	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_SCAN,    TX_PW_BOOST);
+#endif
 }
 
 static bool readBtn(void)
