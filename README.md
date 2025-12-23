@@ -16,7 +16,11 @@ Scanning completes either after 5 seconds or earlier if the code was scanned suc
 ## Building
 
 Use Arduino to compile and flash https://github.com/enspectr/bar-scan-bt/blob/main/BarScanBLE/BarScanBLE.ino
-
+To be able to build this code add the following to Arduino Additional board manager URLs:
+```
+https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+```
+Then go to Boards Manager and install **esp32 by Espressif Systems**. The code is tested with version 3.0.7.
 ## First steps
 
 The scanner module factory configuration is continuous scan emulating USB keyboard. So it will not work with ESP32
