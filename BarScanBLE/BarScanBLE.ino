@@ -90,8 +90,15 @@ static void wait(unsigned msec)
 			char c = buff[i];
 			if (scan_inited) {
 				Serial.write(c);
-				if (bleKeyboard.isConnected())
-					bleKeyboard.write(c);
+				if (bleKeyboard.isConnected()) {
+					if (c != 0xA && c != 0xD)
+						bleKeyboard.write(c);
+					else if (c == 0xA) {
+						bleKeyboard.press(KEY_RETURN);
+						delay(30);
+						bleKeyboard.release(KEY_RETURN);
+					}
+				}
 			} else if (last_byte == 0xff && c == 0x28)
 				scan_inited = true;
 			last_byte = c;
