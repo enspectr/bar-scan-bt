@@ -5,6 +5,7 @@
 //
 
 #include <BleKeyboard.h>
+#include <esp_mac.h>
 
 #define BTN_PIN 0
 #define BTN_DEBOUNCE_TOUT 50
@@ -19,15 +20,28 @@
 #define START_DECODE 0x04, 0xE4, 0x04, 0x00, 0xFF, 0x14
 #define START_SCAN5S 0x08, 0xC6, 0x04, 0x08, 0x00, 0xF2, 0xFA, 0x05, 0xFD, 0x35
 
-const byte wakeUp[]   = {BARCODE_NOP};
-const byte startCmd[] = {AUTO_LIGHT, BARCODE_NOP, START_DECODE, BARCODE_NOP, START_SCAN5S};
-bool scan_inited;
+static const byte wakeUp[]   = {BARCODE_NOP};
+static const byte startCmd[] = {AUTO_LIGHT, BARCODE_NOP, START_DECODE, BARCODE_NOP, START_SCAN5S};
+static bool scan_inited;
 
 #define BARCODER_WRITE(cmd) BarcodeSerial.write(cmd, sizeof(cmd))
 
 // #define DUMP_HEX
 
-BleKeyboard bleKeyboard;
+#define DEV_NAME          "EScan"
+#define DEV_NAME_SUFF_LEN 4
+
+static BleKeyboard bleKeyboard;
+
+static inline char hex_digit(uint8_t v)
+{
+    return v < 10 ? '0' + v : 'A' + v - 10;
+}
+
+static inline char byte_signature(uint8_t v)
+{
+    return hex_digit((v & 0xf) ^ (v >> 4));
+}
 
 void setup()
 {
@@ -37,7 +51,15 @@ void setup()
 
 	pinMode(BTN_PIN, INPUT_PULLUP);
 
-	bleKeyboard.begin();
+	std::string bt_dev_name(DEV_NAME);
+#ifdef DEV_NAME_SUFF_LEN
+	uint8_t mac[8] = {0};
+	if (ESP_OK == esp_efuse_mac_get_default(mac)) {
+		for (int i = 0; i < DEV_NAME_SUFF_LEN && i < sizeof(mac); ++i)
+			bt_dev_name += byte_signature(mac[i]);
+	}
+#endif
+	bleKeyboard.set_device_name(bt_dev_name);
 }
 
 static bool readBtn(void)
