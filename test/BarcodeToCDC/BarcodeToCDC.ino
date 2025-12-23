@@ -12,13 +12,12 @@
 #define BAUD_RATE 9600
 
 #define BARCODE_NOP  0x00
-#define AUTO_LIGHT   0x08, 0xC6, 0x04, 0x08, 0x00, 0xF2, 0x02, 0x00, 0xFE, 0x32
 #define START_DECODE 0x04, 0xE4, 0x04, 0x00, 0xFF, 0x14
 #define START_SCAN5S 0x08, 0xC6, 0x04, 0x08, 0x00, 0xF2, 0xFA, 0x05, 0xFD, 0x35
 
-const byte wakeUp[]   = {BARCODE_NOP};
-const byte startCmd[] = {AUTO_LIGHT, BARCODE_NOP, START_DECODE, BARCODE_NOP, START_SCAN5S};
-bool scan_inited;
+static const byte wakeUp[]   = {BARCODE_NOP};
+static const byte startCmd[] = {START_DECODE, BARCODE_NOP, START_SCAN5S};
+static bool scan_inited;
 
 #define BARCODER_WRITE(cmd) BarcodeSerial.write(cmd, sizeof(cmd))
 
