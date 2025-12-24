@@ -5,6 +5,7 @@
 //
 
 #include <BleKeyboard.h>
+#include <esp_system.h>
 #include <esp_mac.h>
 #include <esp_bt.h>
 
@@ -26,6 +27,9 @@
 static const byte wakeUp[]   = {BARCODE_NOP};
 static const byte startCmd[] = {START_DECODE, BARCODE_NOP, START_SCAN5S};
 static bool scan_inited, scan_done;
+static unsigned boot_ts;
+
+#define RECONNECT_TOUT 20000
 
 #define BARCODER_WRITE(cmd) BarcodeSerial.write(cmd, sizeof(cmd))
 
@@ -42,6 +46,8 @@ static inline char hex_digit(uint8_t v)
 
 void setup()
 {
+	boot_ts = millis();
+
 	Serial.begin(BAUD_RATE);
 	BarcodeSerial.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
 	BarcodeSerial.setTimeout(10);
@@ -101,6 +107,9 @@ static void wait(unsigned msec)
 					if (c != 0xA && c != 0xD)
 						bleKeyboard.write(c);
 					else if (!scan_done) {
+						/* For some reason while reporting 1D and 2D codes
+						 * the scanner uses different line endings.
+						 */
 						bleKeyboard.press(KEY_RETURN);
 						delay(30);
 						bleKeyboard.release(KEY_RETURN);
@@ -117,6 +126,11 @@ static void wait(unsigned msec)
 
 static inline void start_scan(void)
 {
+	if (!bleKeyboard.isConnected()) {
+		if (millis() - boot_ts > RECONNECT_TOUT)
+			esp_restart();
+		return;
+	}
 	scan_inited = scan_done = false;
 #ifdef DUMP_HEX
 	Serial.write('\n');
@@ -133,6 +147,9 @@ void loop() {
 	if (pressed && !btn_pressed)
 		start_scan();
 	btn_pressed = pressed;
+
+	if (!bleKeyboard.isConnected())
+		bleKeyboard.restart_advertising();
 
 	wait(10);
 }
