@@ -9,6 +9,12 @@
 #include <esp_mac.h>
 #include <esp_bt.h>
 
+// Comment it out to disable LED
+#define RGB_LED 10
+#ifdef RGB_LED
+#include <Adafruit_NeoPixel.h>
+#endif
+
 // Comment it out to keep default power level
 #define TX_PW_BOOST ESP_PWR_LVL_P18
 
@@ -24,13 +30,21 @@
 #define BARCODE_NOP  0x00
 #define START_DECODE 0x04, 0xE4, 0x04, 0x00, 0xFF, 0x14
 #define START_SCAN5S 0x08, 0xC6, 0x04, 0x08, 0x00, 0xF2, 0xFA, 0x05, 0xFD, 0x35
+#define BARCODER_WRITE(cmd) BarcodeSerial.write(cmd, sizeof(cmd))
 
 static const byte wakeUp[]   = {BARCODE_NOP};
 static const byte startCmd[] = {START_DECODE, BARCODE_NOP, START_SCAN5S};
 static bool scan_inited, scan_done;
 static unsigned boot_ts;
 
-#define BARCODER_WRITE(cmd) BarcodeSerial.write(cmd, sizeof(cmd))
+#ifdef RGB_LED
+Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
+
+#define LED_BRIGHTNESS 4
+#define RGB_RED   pixels.Color(LED_BRIGHTNESS, 0, 0)
+#define RGB_GREEN pixels.Color(0, LED_BRIGHTNESS, 0)
+#define RGB_BLUE  pixels.Color(0, 0, LED_BRIGHTNESS)
+#endif
 
 // #define DUMP_HEX
 
@@ -70,6 +84,12 @@ void setup()
 	bleKeyboard.begin();
 #ifdef TX_PW_BOOST
 	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, TX_PW_BOOST);
+#endif
+
+#ifdef RGB_LED
+	pixels.begin();
+	pixels.clear();
+	pixels.show();
 #endif
 }
 
@@ -158,8 +178,19 @@ void loop() {
 		start_scan();
 	btn_pressed = pressed;
 
-	if (!bleKeyboard.isConnected())
+	const int is_connected = bleKeyboard.isConnected();
+	if (!is_connected) {
 		bleKeyboard.restart_advertising();
+	}
+
+#ifdef RGB_LED
+	static int led_connected = -1;
+	if (led_connected != is_connected) {
+		pixels.setPixelColor(0, is_connected ? RGB_BLUE : RGB_RED);
+		pixels.show();
+		led_connected = is_connected;
+	}
+#endif
 
 	wait(10);
 }
