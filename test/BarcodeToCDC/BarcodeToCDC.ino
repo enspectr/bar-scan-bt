@@ -21,7 +21,7 @@ static bool scan_inited;
 
 #define BARCODER_WRITE(cmd) BarcodeSerial.write(cmd, sizeof(cmd))
 
-// #define DUMP_HEX
+#define DUMP_HEX
 
 void setup()
 {

@@ -25,7 +25,7 @@
 
 static const byte wakeUp[]   = {BARCODE_NOP};
 static const byte startCmd[] = {START_DECODE, BARCODE_NOP, START_SCAN5S};
-static bool scan_inited;
+static bool scan_inited, scan_done;
 
 #define BARCODER_WRITE(cmd) BarcodeSerial.write(cmd, sizeof(cmd))
 
@@ -102,10 +102,11 @@ static void wait(unsigned msec)
 				if (bleKeyboard.isConnected()) {
 					if (c != 0xA && c != 0xD)
 						bleKeyboard.write(c);
-					else if (c == 0xA) {
+					else if (!scan_done) {
 						bleKeyboard.press(KEY_RETURN);
 						delay(30);
 						bleKeyboard.release(KEY_RETURN);
+						scan_done = true;
 					}
 				}
 			} else if (last_byte == 0xff && c == 0x28)
@@ -118,7 +119,7 @@ static void wait(unsigned msec)
 
 static inline void start_scan(void)
 {
-	scan_inited = false;
+	scan_inited = scan_done = false;
 #ifdef DUMP_HEX
 	Serial.write('\n');
 #endif
