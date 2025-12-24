@@ -64,8 +64,6 @@ void setup()
 	bleKeyboard.begin();
 #ifdef TX_PW_BOOST
 	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, TX_PW_BOOST);
-	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV,     TX_PW_BOOST);
-	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_SCAN,    TX_PW_BOOST);
 #endif
 }
 
