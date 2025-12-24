@@ -14,6 +14,7 @@
 
 #define BTN_PIN 0
 #define BTN_DEBOUNCE_TOUT 50
+#define BTN_LONG_PRESS_TOUT 1500
 
 #define BarcodeSerial Serial1
 #define TX_PIN 1
@@ -29,13 +30,12 @@ static const byte startCmd[] = {START_DECODE, BARCODE_NOP, START_SCAN5S};
 static bool scan_inited, scan_done;
 static unsigned boot_ts;
 
-#define RECONNECT_TOUT 20000
-
 #define BARCODER_WRITE(cmd) BarcodeSerial.write(cmd, sizeof(cmd))
 
 // #define DUMP_HEX
 
 #define DEV_NAME "EScan"
+#define RECONNECT_TOUT 20000
 
 static BleKeyboard bleKeyboard(DEV_NAME);
 
@@ -73,13 +73,23 @@ void setup()
 #endif
 }
 
+static void long_press_handler(void)
+{
+	esp_restart();
+}
+
 static bool readBtn(void)
 {
 	static bool btn_pressed;
-	static unsigned last_pressed;
+	static unsigned first_pressed, last_pressed;
 	if (!digitalRead(BTN_PIN)) {
 		last_pressed = millis();
-		btn_pressed = true;
+		if (!btn_pressed) {
+			first_pressed = last_pressed;
+			btn_pressed = true;
+		} else if (last_pressed - first_pressed > BTN_LONG_PRESS_TOUT) {
+			long_press_handler();
+		}
 	} else if (btn_pressed && millis() - last_pressed > BTN_DEBOUNCE_TOUT) {
 		btn_pressed = false;
 	}
