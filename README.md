@@ -46,6 +46,18 @@ To check how it works one may scan the following figure and compare result with 
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/test_qrcode.jpg" />
 </p>
 
+## LED indicator functions
+
+The adapter uses on-board RGB LED to indicate its operational status as described in the following table.
+
+|   Color       |   Meaning                            |
+|---------------|--------------------------------------|
+| Red           | Adapter is starting or resetting     |
+| Yellow        | Adapter is not connected to the host |
+| Blue          | Adapter is connected to the host     |
+| Magenta pulse | Scanning started                     |
+| Green pulse   | Scanning completed                   |
+
 ## Power consumption
 
 Total consumption from 5V source together with GM67 module is 60mA in idle state, 240mA while scanning.
