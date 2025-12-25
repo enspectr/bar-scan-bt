@@ -4,6 +4,7 @@
 // and transmit to the connect host as BLE keyboard
 //
 
+#include <Preferences.h>
 #include <BleKeyboard.h>
 #include <esp_system.h>
 #include <esp_mac.h>
@@ -72,6 +73,10 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 
 static BleKeyboard bleKeyboard(DEV_NAME);
 
+#define CFG_NAMESPACE "BarScanCfg"
+
+static Preferences config;
+
 static inline char hex_digit(uint8_t v)
 {
     return v < 10 ? '0' + v : 'A' + v - 10;
@@ -91,6 +96,10 @@ static inline void led_show_color(uint32_t c)
 void setup()
 {
 	boot_ts = millis();
+
+	config.begin(CFG_NAMESPACE, true);
+	scan_csum_on = config.getBool("csum_on");
+	config.end();
 
 	Serial.begin(BAUD_RATE);
 	BarcodeSerial.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
@@ -153,6 +162,13 @@ static bool readBtn(void)
 	return btn_pressed;
 }
 
+static void save_config(void)
+{
+	config.begin(CFG_NAMESPACE, false);
+	config.putBool("csum_on", scan_csum_on);
+	config.end();
+}
+
 static inline char b64symbol(uint8_t code)
 {
 	uint8_t const LETTERS = 'Z' - 'A' + 1;
@@ -179,6 +195,27 @@ static void append_csum(String& s)
 	s += b64symbol(sum & b64mask);
 }
 
+static inline void enable_csum(bool on)
+{
+	scan_csum_on = on;
+	// Bright cyan pulse indicates control code reception
+	led_show_color(RGB_HCYAN);
+	save_config();
+	delay(30);
+}
+
+static inline void flush_buffer(void)
+{
+	if (scan_csum_on)
+		append_csum(scan_buff);
+	// Bright green pulse indicates scanning completion
+	led_show_color(RGB_HGREEN);
+	bleKeyboard.print(scan_buff);
+	bleKeyboard.press(KEY_RETURN);
+	delay(30);
+	bleKeyboard.release(KEY_RETURN);
+}
+
 static void process_barcoder_byte(char c)
 {
 #ifdef DUMP_HEX
@@ -196,26 +233,12 @@ static void process_barcoder_byte(char c)
 				/* For some reason while reporting 1D and 2D codes
 				 * the scanner uses different line endings.
 				 */
-				if (scan_buff == cmd_chsum_on) {
-					scan_csum_on = true;
-					// Bright cyan pulse indicates control code reception
-					led_show_color(RGB_HCYAN);
-					delay(30);
-				} else if (scan_buff == cmd_chsum_off) {
-					scan_csum_on = false;
-					// Bright cyan pulse indicates control code reception
-					led_show_color(RGB_HCYAN);
-					delay(30);
-				} else {
-					// Bright green pulse indicates scanning completion
-					if (scan_csum_on)
-						append_csum(scan_buff);
-					led_show_color(RGB_HGREEN);
-					bleKeyboard.print(scan_buff);
-					bleKeyboard.press(KEY_RETURN);
-					delay(30);
-					bleKeyboard.release(KEY_RETURN);
-				}
+				if (scan_buff == cmd_chsum_on)
+					enable_csum(true);
+				else if (scan_buff == cmd_chsum_off)
+					enable_csum(false);
+				else
+					flush_buffer();
 				scan_done = true;
 			}
 		}
