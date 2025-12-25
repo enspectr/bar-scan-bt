@@ -92,4 +92,4 @@ The bar-code scanner uses virtual keyboard to transfer code scanned to host comp
 
 Yet BT has some means to transmit single message reliably with receiver confirmation. This mechanism is called 'indication'. This indication confirmations were supported in the original bluedroid BT stack. Unfortunately the community is now migrating to NimBLE stack that does not support indication confirmation at all.
 
-Note that even in case we could detect single symbol corruption is does not help us to ensure entire code transmitting integrity since after loosing some symbol in the middle we are left with partially transmitted code anyway.
+Note that even in case we could detect single symbol corruption it does not help us to ensure entire code integrity. After loosing some symbol in the middle we are left with partially transmitted code anyway.
