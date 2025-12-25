@@ -21,6 +21,8 @@ To be able to build this code add the following to Arduino Additional board mana
 https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 ```
 Then go to Boards Manager and install **esp32 by Espressif Systems**. The code is tested with version 3.0.7.
+The implementation is using NimBLE stack https://github.com/h2zero/NimBLE-Arduino
+
 ## First steps
 
 The scanner module factory configuration is continuous scan emulating USB keyboard. So it will not work with ESP32
@@ -83,3 +85,8 @@ This is the method to be used if nothing else have helped. To reset scanner to f
 <p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/default_settings.jpg" />
 </p>
+
+## Implementation notes
+
+The bar-code scanner uses virtual keyboard to transfer code scanned to host computer. Unfortunately the low energy Bluetooth in inherently unreliable. So its possible that some symbols may be lost in transit and not be received by the host. If the host does not validate bar-code it has no means to detect code corruption.
+Yet BT has some means to transmit single message reliably with receiver confirmation. This mechanism is called 'indication'. This mechanism was supported in bluedroid BT stack. Unfortunately the community is now migrating to NimBLE stack that does not support indication confirmation at all.
