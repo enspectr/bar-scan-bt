@@ -88,10 +88,8 @@ This is the method to be used if nothing else have helped. To reset scanner to f
 
 ## Implementation notes
 
-The bar-code scanner uses virtual keyboard to transfer code scanned to host computer. Unfortunately the low energy Bluetooth in inherently unreliable. So its possible that some symbols may be lost in transit and not be received by the host. If the host does not validate bar-code it has no means to detect code corruption.
+The bar-code scanner uses virtual keyboard to transfer code scanned to host computer. Unfortunately the low energy Bluetooth is inherently unreliable. So its possible that some symbols may be lost in transit and not be received by the host. If the host does not validate bar-code it has no means to detect code corruption.
 
 Yet BT has some means to transmit single message reliably with receiver confirmation. This mechanism is called 'indication'. This indication confirmations were supported in the original bluedroid BT stack. Unfortunately the community is now migrating to NimBLE stack that does not support indication confirmation at all.
 
 Note that even in case we could detect single symbol corruption is does not help us to ensure entire code transmitting integrity since after loosing some symbol in the middle we are left with partially transmitted code anyway.
-
-
