@@ -39,12 +39,25 @@ static unsigned boot_ts;
 
 #ifdef RGB_LED
 Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
-
-#define LED_BRIGHTNESS 4
-#define RGB_RED   pixels.Color(LED_BRIGHTNESS, 0, 0)
-#define RGB_GREEN pixels.Color(0, LED_BRIGHTNESS, 0)
-#define RGB_BLUE  pixels.Color(0, 0, LED_BRIGHTNESS)
+#define RGB_(color) pixels.Color(color)
+#else
+#define RGB_(color) 0
 #endif
+
+#define LED_BRIGHTNESS 2
+#define LED_BRIGHTNESS_HIGH 16
+#define RED_(br)     br, 0, 0
+#define GREEN_(br)   0, br, 0
+#define BLUE_(br)    0, 0, br
+#define YELLOW_(br)  br/2, br/2, 0
+#define MAGENTA_(br) br/2, 0, br/2
+#define WHITE_(br)   br/2, br/2, br/2
+#define RGB_RED      RGB_(RED_(LED_BRIGHTNESS))
+#define RGB_BLUE     RGB_(BLUE_(LED_BRIGHTNESS))
+#define RGB_YELLOW   RGB_(YELLOW_(LED_BRIGHTNESS))
+#define RGB_HMAGENTA RGB_(MAGENTA_(LED_BRIGHTNESS_HIGH))
+#define RGB_HRED     RGB_(RED_(LED_BRIGHTNESS_HIGH))
+#define RGB_HGREEN   RGB_(GREEN_(LED_BRIGHTNESS_HIGH))
 
 // #define DUMP_HEX
 
@@ -58,6 +71,17 @@ static inline char hex_digit(uint8_t v)
     return v < 10 ? '0' + v : 'A' + v - 10;
 }
 
+static inline void led_show_color(uint32_t c)
+{
+#ifdef RGB_LED
+	static uint32_t last_color = ~0;
+	if (c != last_color) {
+		pixels.setPixelColor(0, c);
+		pixels.show();
+	}
+#endif
+}
+
 void setup()
 {
 	boot_ts = millis();
@@ -67,6 +91,12 @@ void setup()
 	BarcodeSerial.setTimeout(10);
 
 	pinMode(BTN_PIN, INPUT_PULLUP);
+
+#ifdef RGB_LED
+	pixels.begin();
+	led_show_color(RGB_HRED);
+	delay(50);
+#endif
 
 	uint8_t mac[8] = {0};
 	if (ESP_OK == esp_efuse_mac_get_default(mac))
@@ -85,17 +115,18 @@ void setup()
 #ifdef TX_PW_BOOST
 	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, TX_PW_BOOST);
 #endif
+}
 
-#ifdef RGB_LED
-	pixels.begin();
-	pixels.clear();
-	pixels.show();
-#endif
+static void reset_self(void)
+{
+	// Bright red pulse indicates reset
+	led_show_color(RGB_HRED);
+	esp_restart();
 }
 
 static void long_press_handler(void)
 {
-	esp_restart();
+	reset_self();
 }
 
 static bool readBtn(void)
@@ -139,6 +170,8 @@ static void wait(unsigned msec)
 					/* For some reason while reporting 1D and 2D codes
 					 * the scanner uses different line endings.
 					 */
+					// Bright green pulse indicates scanning completion
+					led_show_color(RGB_HGREEN);
 					bleKeyboard.press(KEY_RETURN);
 					delay(30);
 					bleKeyboard.release(KEY_RETURN);
@@ -156,19 +189,22 @@ static inline void start_scan(void)
 {
 	if (!bleKeyboard.isConnected()) {
 		if (millis() - boot_ts > RECONNECT_TOUT)
-			esp_restart();
+			reset_self();
 		return;
 	}
 	scan_inited = scan_done = false;
 #ifdef DUMP_HEX
 	Serial.write('\n');
 #endif
+	// Bright magenta pulse indicates scanning start
+	led_show_color(RGB_HMAGENTA);
 	BARCODER_WRITE(wakeUp);
 	wait(50);
 	BARCODER_WRITE(startCmd);
 }
 
-void loop() {
+void loop()
+{
 	static bool btn_pressed;
 
 	bool const pressed = readBtn();
@@ -177,18 +213,11 @@ void loop() {
 	btn_pressed = pressed;
 
 	const int is_connected = bleKeyboard.isConnected();
-	if (!is_connected) {
+	if (!is_connected)
 		bleKeyboard.restart_advertising();
-	}
 
-#ifdef RGB_LED
-	static int led_connected = -1;
-	if (led_connected != is_connected) {
-		pixels.setPixelColor(0, is_connected ? RGB_BLUE : RGB_RED);
-		pixels.show();
-		led_connected = is_connected;
-	}
-#endif
+	// Indicate connection status
+	led_show_color(is_connected ? RGB_BLUE : RGB_YELLOW);
 
 	wait(10);
 }
