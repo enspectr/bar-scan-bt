@@ -32,10 +32,16 @@
 #define START_SCAN5S 0x08, 0xC6, 0x04, 0x08, 0x00, 0xF2, 0xFA, 0x05, 0xFD, 0x35
 #define BARCODER_WRITE(cmd) BarcodeSerial.write(cmd, sizeof(cmd))
 
-static const byte wakeUp[]   = {BARCODE_NOP};
-static const byte startCmd[] = {START_DECODE, BARCODE_NOP, START_SCAN5S};
-static bool scan_inited, scan_done;
 static unsigned boot_ts;
+
+static const byte barcoder_wake_up[] = {BARCODE_NOP};
+static const byte barcoder_start[] = {START_DECODE, BARCODE_NOP, START_SCAN5S};
+
+static bool scan_inited, scan_done;
+static String scan_buff;
+static const String cmd_chsum_on ("jMRMf549y172QLpp");
+static const String cmd_chsum_off("jMRMf549y172QLpq");
+static bool scan_csum_on;
 
 #ifdef RGB_LED
 Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
@@ -51,18 +57,18 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 #define BLUE_(br)    0, 0, br
 #define YELLOW_(br)  br, br/2, 0
 #define MAGENTA_(br) br/2, 0, br/2
-#define WHITE_(br)   br/2, br/2, br/2
+#define CYAN_(br)    0, br/2, br/2
 #define RGB_RED      RGB_(RED_(LED_BRIGHTNESS))
 #define RGB_BLUE     RGB_(BLUE_(LED_BRIGHTNESS))
 #define RGB_YELLOW   RGB_(YELLOW_(LED_BRIGHTNESS))
 #define RGB_HMAGENTA RGB_(MAGENTA_(LED_BRIGHTNESS_HIGH))
 #define RGB_HRED     RGB_(RED_(LED_BRIGHTNESS_HIGH))
 #define RGB_HGREEN   RGB_(GREEN_(LED_BRIGHTNESS_HIGH))
+#define RGB_HCYAN    RGB_(CYAN_(LED_BRIGHTNESS_HIGH))
 
 // #define DUMP_HEX
 
 #define DEV_NAME "EScan"
-#define RECONNECT_TOUT 20000
 
 static BleKeyboard bleKeyboard(DEV_NAME);
 
@@ -147,6 +153,78 @@ static bool readBtn(void)
 	return btn_pressed;
 }
 
+static inline char b64symbol(uint8_t code)
+{
+	uint8_t const LETTERS = 'Z' - 'A' + 1;
+	if (code < LETTERS)
+		return 'A' + code;
+	if (code < 2*LETTERS)
+		return 'a' + code - LETTERS;
+	if (code < 2*LETTERS + 10)
+		return '0' + code - 2*LETTERS;
+	if (code == 2*LETTERS + 10)
+		return '+';
+	if (code == 2*LETTERS + 11)
+		return '/';
+	return 0; // Invalid code
+}
+
+static void append_csum(String& s)
+{
+	unsigned sum = 0;
+	for (unsigned i = 0; i < s.length(); ++i)
+		sum += (unsigned char)s[i];
+	unsigned const b64mask = ((1 << 6) - 1);
+	s += b64symbol((sum >> 6) & b64mask);
+	s += b64symbol(sum & b64mask);
+}
+
+static void process_barcoder_byte(char c)
+{
+#ifdef DUMP_HEX
+	static char buf[5] = {};
+	unsigned const n = snprintf(buf, sizeof(buf)-1, "%02x ", c);
+	Serial.write(buf, n);
+#else
+	static char last_byte;
+	if (scan_inited) {
+		Serial.write(c);
+		if (!scan_done) {
+			if (c != 0xA && c != 0xD)
+				scan_buff += c;
+			else {
+				/* For some reason while reporting 1D and 2D codes
+				 * the scanner uses different line endings.
+				 */
+				if (scan_buff == cmd_chsum_on) {
+					scan_csum_on = true;
+					// Bright cyan pulse indicates control code reception
+					led_show_color(RGB_HCYAN);
+					delay(30);
+				} else if (scan_buff == cmd_chsum_off) {
+					scan_csum_on = false;
+					// Bright cyan pulse indicates control code reception
+					led_show_color(RGB_HCYAN);
+					delay(30);
+				} else {
+					// Bright green pulse indicates scanning completion
+					if (scan_csum_on)
+						append_csum(scan_buff);
+					led_show_color(RGB_HGREEN);
+					bleKeyboard.print(scan_buff);
+					bleKeyboard.press(KEY_RETURN);
+					delay(30);
+					bleKeyboard.release(KEY_RETURN);
+				}
+				scan_done = true;
+			}
+		}
+	} else if (last_byte == 0xff && c == 0x28)
+		scan_inited = true;
+	last_byte = c;
+#endif
+}
+
 static void wait(unsigned msec)
 {
 	unsigned const start_ts = millis();
@@ -154,53 +232,23 @@ static void wait(unsigned msec)
 
 	while (millis() - start_ts < msec) {
 		unsigned sz = BarcodeSerial.readBytes(buff, sizeof(buff));
-		for (unsigned i = 0; i < sz; ++i) {
-#ifdef DUMP_HEX
-			static char buf[5] = {};
-			unsigned const n = snprintf(buf, sizeof(buf)-1, "%02x ", buff[i]);
-			Serial.write(buf, n);
-#else
-			static char last_byte;
-			char c = buff[i];
-			if (scan_inited) {
-				Serial.write(c);
-				if (c != 0xA && c != 0xD)
-					bleKeyboard.write(c);
-				else if (!scan_done) {
-					/* For some reason while reporting 1D and 2D codes
-					 * the scanner uses different line endings.
-					 */
-					// Bright green pulse indicates scanning completion
-					led_show_color(RGB_HGREEN);
-					bleKeyboard.press(KEY_RETURN);
-					delay(30);
-					bleKeyboard.release(KEY_RETURN);
-					scan_done = true;
-				}
-			} else if (last_byte == 0xff && c == 0x28)
-				scan_inited = true;
-			last_byte = c;
-#endif
-		}
+		for (unsigned i = 0; i < sz; ++i)
+			process_barcoder_byte(buff[i]);
 	}
 }
 
 static inline void start_scan(void)
 {
-	if (!bleKeyboard.isConnected()) {
-		if (millis() - boot_ts > RECONNECT_TOUT)
-			reset_self();
-		return;
-	}
 	scan_inited = scan_done = false;
+	scan_buff.clear();
 #ifdef DUMP_HEX
 	Serial.write('\n');
 #endif
 	// Bright magenta pulse indicates scanning start
 	led_show_color(RGB_HMAGENTA);
-	BARCODER_WRITE(wakeUp);
+	BARCODER_WRITE(barcoder_wake_up);
 	wait(50);
-	BARCODER_WRITE(startCmd);
+	BARCODER_WRITE(barcoder_start);
 }
 
 void loop()
