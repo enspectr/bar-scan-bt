@@ -49,7 +49,7 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 #define RED_(br)     br, 0, 0
 #define GREEN_(br)   0, br, 0
 #define BLUE_(br)    0, 0, br
-#define YELLOW_(br)  br/2, br/2, 0
+#define YELLOW_(br)  br, br/2, 0
 #define MAGENTA_(br) br/2, 0, br/2
 #define WHITE_(br)   br/2, br/2, br/2
 #define RGB_RED      RGB_(RED_(LED_BRIGHTNESS))
