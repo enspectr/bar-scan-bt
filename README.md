@@ -52,7 +52,21 @@ Total consumption from 5V source together with GM67 module is 60mA in idle state
 
 ## Troubleshooting
 
-If things go wrong try to reset scanner to factory defaults using the following control code and repeat configuration procedure.
+If things go wrong one can try the following steps to recover:
+
+### Reset adapter
+
+The adapter is able to reset itself in 2 cases:
+* on pressing scan start button white disconnected from the host
+* on long pressing start button
+
+### Reconnect adapter to the host
+
+Sometimes scan codes are not being delivered to the host while the connection is established. To root cause of this problem is unknown. Disconnect adapter and connect to it again to recover.
+
+### Reset adapter to factory defaults
+
+This is the method to be used if nothing else have helped. To reset scanner to factory defaults using the following control code and repeat configuration procedure.
 
 <p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/default_settings.jpg" />
