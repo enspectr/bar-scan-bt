@@ -25,6 +25,7 @@
 #define BTN_PIN 0
 #define BTN_DEBOUNCE_TOUT 50
 #define BTN_LONG_PRESS_TOUT 1500
+#define STANDBY_TOUT (300*1000)
 
 #define BarcodeSerial Serial1
 #define TX_PIN 1
@@ -80,7 +81,7 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 #define DEV_NAME "EScan"
 
 static BleKeyboard ble_keyboard(DEV_NAME);
-static bool ble_keyboard_inited;
+static bool        ble_keyboard_inited;
 
 #define CFG_NAMESPACE "BarScanCfg"
 
@@ -104,8 +105,6 @@ static inline void led_show_color(uint32_t c)
 
 void setup()
 {
-	boot_ts = millis();
-
 	config.begin(CFG_NAMESPACE, true);
 	scan_csum_on  = config.getBool("csum_on");
 	scan_csum_sep = config.getInt ("csum_sep");
@@ -136,6 +135,8 @@ void setup()
 		bt_dev_name += hex_digit(sig[2] & 0xf);
 		ble_keyboard.set_device_name(bt_dev_name);
 	}
+
+	boot_ts = millis();
 }
 
 static inline void ble_keyboard_init(void)
@@ -232,6 +233,8 @@ static void print_eol(void)
 
 static inline void print_version(void)
 {
+	if (!ble_keyboard_inited)
+		return;
 	// Bright cyan pulse indicates control code reception
 	led_show_color(RGB_HCYAN);
 	ble_keyboard.print(VERSION_INFO);
@@ -240,6 +243,8 @@ static inline void print_version(void)
 
 static inline void flush_buffer(void)
 {
+	if (!ble_keyboard_inited)
+		return;
 	if (scan_csum_on)
 		append_csum(scan_buff);
 	// Bright green pulse indicates scanning completion
@@ -316,18 +321,26 @@ void loop()
 	bool const is_connected = ble_keyboard_inited && ble_keyboard.isConnected();
 	bool const pressed = readBtn();
 	if (pressed && !btn_pressed) {
-		if (is_connected)
-			start_scan();
-		else if (!ble_keyboard_inited)
-			ble_keyboard_init();
+		if (millis() - boot_ts > 200) {
+			if (is_connected)
+				start_scan();
+			else if (!ble_keyboard_inited)
+				ble_keyboard_init();
+		}
 	}
 	btn_pressed = pressed;
 
-	if (!is_connected)
+	if (!is_connected && ble_keyboard_inited)
 		ble_keyboard.restart_advertising();
 
 	// Indicate connection status
 	led_show_color(!ble_keyboard_inited ? RGB_OFF : is_connected ? RGB_BLUE : RGB_YELLOW);
+
+	static unsigned ble_last_connected;
+	if (is_connected)
+		ble_last_connected = millis();
+	else if (millis() - ble_last_connected > STANDBY_TOUT)
+		reset_self();
 
 	wait(10);
 }
