@@ -68,17 +68,15 @@ The scanner has an option to append checksum to the code scanned so that the hos
 
 To enable checksums one should scan the following control code:
 
-<figure align="center">
+<p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/csum_on.png" />
-  <figcaption>Code to enable checksums</figcaption>
-</figure>
+</p>
 
 Once enabled checksums will always be used even after power cycling. To disable checksums one should scan the following control code:
 
-<figure align="center">
+<p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/csum_off.png" />
-  <figcaption>Code to disable checksums</figcaption>
-</figure>
+</p>
 
 ## Troubleshooting
 
