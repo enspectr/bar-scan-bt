@@ -47,6 +47,8 @@ To check how it works one may scan the following figure and compare result with 
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/test_qrcode.jpg" />
 </p>
 
+Another quick test is to [query adapter version](#finding-adapter-version).
+
 ## LED indicator functions
 
 The adapter uses on-board RGB LED to indicate its operational status as described in the following table.
