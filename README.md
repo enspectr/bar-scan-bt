@@ -53,8 +53,9 @@ Another quick test is to [query adapter version](#finding-adapter-version).
 
 The adapter uses on-board RGB LED to indicate its operational status as described in the following table.
 
-|   Color       |   Meaning                            |
+|   LED Color   |   Meaning                            |
 |---------------|--------------------------------------|
+| LED off       | Standby                              |
 | Red           | Adapter is starting or resetting     |
 | Yellow        | Adapter is not connected to the host |
 | Blue          | Adapter is connected to the host     |
@@ -116,4 +117,4 @@ If some features don't work the first step to investigate the root cause is find
 
 ## Power consumption
 
-Total consumption from 5V source together with GM67 module is 60mA in idle state, 240mA while scanning.
+Total consumption from 5V source together with GM67 module is 33mA in standby state, 62mA in idle state, 240mA while scanning.
