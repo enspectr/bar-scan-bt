@@ -72,6 +72,12 @@ To enable checksums one should scan the following control code:
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/csum_on.png" />
 </p>
 
+The adapter can optionally separate chechsum from the scanned text by ~ symbol. This will allow the host to determine whether the scanned code has a checksum or not, provided that the ~ character is not used in the codes themselves. To enable checksums with ~ separator one should scan the following control code:
+
+<p align="center">
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/csum_on2.png" />
+</p>
+
 Once enabled checksums will always be used even after power cycling. To disable checksums one should scan the following control code:
 
 <p align="center">
