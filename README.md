@@ -42,7 +42,7 @@ After switching to host mode the scanner stops continuous scan. Use button on th
 The adapter presents scanner as BT keyboard with name started with **EScan** followed by a unique suffix made up of 6 hexadecimal digits.
 Once scanned, the code will be entered using this virtual keyboard at the place where the input focus is currently located.
 
-Right after powering on the adapter starts in standby state to save power. In this state the BT is not turned on so the connection to the host computer is impossible. To turn on BT one should press start button once. In case there is no connection to the host for more than 5 minutes the adapter switches to standby mode automatically.
+Right after powering on the adapter starts in standby mode to save power. In this mode the BT is not turned on so the connection to the host computer is impossible. To turn on BT one should press start button once. In case there is no connection to the host for more than 5 minutes the adapter switches to standby mode automatically.
 
 ## Testing
 
@@ -60,7 +60,7 @@ The adapter uses on-board RGB LED to indicate its operational status as describe
 
 |   LED Color   |   Meaning                            |
 |---------------|--------------------------------------|
-| LED off       | Standby                              |
+| LED off       | Standby mode                         |
 | Red           | Adapter is starting or resetting     |
 | Yellow        | Adapter is not connected to the host |
 | Blue          | Adapter is connected to the host     |
@@ -98,7 +98,7 @@ If things go wrong one can try the following steps to recover:
 
 ### Reset adapter
 
-To reset the adapter, press the start button and hold it for more than 1.5 seconds. It will restart in standby state.
+To reset the adapter, press the start button and hold it for more than 1.5 seconds. It will restart in standby mode.
 
 ### Reconnect adapter to the host
 
@@ -122,4 +122,4 @@ If some features don't work the first step to investigate the root cause is find
 
 ## Power consumption
 
-Total consumption from 5V source together with GM67 module is 33mA in standby state, 62mA in idle state, 240mA while scanning.
+Total consumption from 5V source together with GM67 module is 33mA in standby mode, 62mA in idle state, 240mA while scanning.
