@@ -304,14 +304,14 @@ static inline void start_scan(void)
 
 void loop()
 {
+	const bool is_connected = bleKeyboard.isConnected();
 	static bool btn_pressed;
 
 	bool const pressed = readBtn();
-	if (pressed && !btn_pressed)
+	if (pressed && !btn_pressed && is_connected)
 		start_scan();
 	btn_pressed = pressed;
 
-	const int is_connected = bleKeyboard.isConnected();
 	if (!is_connected)
 		bleKeyboard.restart_advertising();
 
