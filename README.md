@@ -88,7 +88,7 @@ To reset the adapter, press the start button and hold it for more than 1.5 secon
 
 ### Reconnect adapter to the host
 
-Sometimes scan codes are not being delivered to the host while the connection is established. To root cause of this problem is unknown. Disconnect adapter and connect to it again to recover.
+Sometimes scan codes are not being delivered to the host while the connection is established. The root cause of this problem is unknown. Disconnect adapter and connect to it again to recover.
 
 ### Reset adapter to factory defaults
 
