@@ -59,12 +59,14 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 
 #define LED_BRIGHTNESS 2
 #define LED_BRIGHTNESS_HIGH 16
+#define BLACK_()     0, 0, 0
 #define RED_(br)     br, 0, 0
 #define GREEN_(br)   0, br, 0
 #define BLUE_(br)    0, 0, br
 #define YELLOW_(br)  br, br/2, 0
 #define MAGENTA_(br) br/2, 0, br/2
 #define CYAN_(br)    0, br/2, br/2
+#define RGB_OFF      RGB_(BLACK_())
 #define RGB_RED      RGB_(RED_(LED_BRIGHTNESS))
 #define RGB_BLUE     RGB_(BLUE_(LED_BRIGHTNESS))
 #define RGB_YELLOW   RGB_(YELLOW_(LED_BRIGHTNESS))
@@ -77,7 +79,8 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 
 #define DEV_NAME "EScan"
 
-static BleKeyboard bleKeyboard(DEV_NAME);
+static BleKeyboard ble_keyboard(DEV_NAME);
+static bool ble_keyboard_inited;
 
 #define CFG_NAMESPACE "BarScanCfg"
 
@@ -131,9 +134,14 @@ void setup()
 		bt_dev_name += hex_digit(sig[1] & 0xf);
 		bt_dev_name += hex_digit(sig[2] >> 4);
 		bt_dev_name += hex_digit(sig[2] & 0xf);
-		bleKeyboard.set_device_name(bt_dev_name);
+		ble_keyboard.set_device_name(bt_dev_name);
 	}
-	bleKeyboard.begin();
+}
+
+static inline void ble_keyboard_init(void)
+{
+	ble_keyboard.begin();
+	ble_keyboard_inited = true;
 #ifdef TX_PW_BOOST
 	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, TX_PW_BOOST);
 #endif
@@ -217,16 +225,16 @@ static inline void enable_csum(bool on, char sep = 0)
 
 static void print_eol(void)
 {
-	bleKeyboard.press(KEY_RETURN);
+	ble_keyboard.press(KEY_RETURN);
 	delay(30);
-	bleKeyboard.release(KEY_RETURN);
+	ble_keyboard.release(KEY_RETURN);
 }
 
 static inline void print_version(void)
 {
 	// Bright cyan pulse indicates control code reception
 	led_show_color(RGB_HCYAN);
-	bleKeyboard.print(VERSION_INFO);
+	ble_keyboard.print(VERSION_INFO);
 	print_eol();
 }
 
@@ -236,7 +244,7 @@ static inline void flush_buffer(void)
 		append_csum(scan_buff);
 	// Bright green pulse indicates scanning completion
 	led_show_color(RGB_HGREEN);
-	bleKeyboard.print(scan_buff);
+	ble_keyboard.print(scan_buff);
 	print_eol();
 }
 
@@ -304,19 +312,22 @@ static inline void start_scan(void)
 
 void loop()
 {
-	const bool is_connected = bleKeyboard.isConnected();
 	static bool btn_pressed;
-
+	bool const is_connected = ble_keyboard_inited && ble_keyboard.isConnected();
 	bool const pressed = readBtn();
-	if (pressed && !btn_pressed && is_connected)
-		start_scan();
+	if (pressed && !btn_pressed) {
+		if (is_connected)
+			start_scan();
+		else if (!ble_keyboard_inited)
+			ble_keyboard_init();
+	}
 	btn_pressed = pressed;
 
 	if (!is_connected)
-		bleKeyboard.restart_advertising();
+		ble_keyboard.restart_advertising();
 
 	// Indicate connection status
-	led_show_color(is_connected ? RGB_BLUE : RGB_YELLOW);
+	led_show_color(!ble_keyboard_inited ? RGB_OFF : is_connected ? RGB_BLUE : RGB_YELLOW);
 
 	wait(10);
 }
