@@ -22,7 +22,7 @@ https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32
 Then go to Boards Manager and install **esp32 by Espressif Systems**. The code is tested with version 3.0.7.
 The implementation is using NimBLE stack https://github.com/h2zero/NimBLE-Arduino
 
-## First steps
+## Initial configuration steps
 
 The scanner module factory configuration is continuous scan emulating USB keyboard. So it will not work with ESP32
 controller out of the box. There are two control codes that should be scanned once to properly configure GM67 module.
@@ -106,7 +106,7 @@ Sometimes scan codes are not being delivered to the host while the connection is
 
 ### Reset adapter to factory defaults
 
-This is the method to be used if nothing else have helped. To reset scanner to factory defaults using the following control code and repeat configuration procedure.
+This is the method to be used if nothing else have helped. To reset scanner to factory defaults using the following control code and repeat [configuration procedure](#initial-configuration-steps).
 
 <p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/default_settings.jpg" />
