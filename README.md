@@ -37,11 +37,16 @@ After switching to host mode the scanner stops continuous scan. Use button on th
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/serial_interface.jpg" />
 </p>
 
-## Testing
+## Operation
 
 The adapter presents scanner as BT keyboard with name started with **EScan** followed by a unique suffix made up of 6 hexadecimal digits.
 Once scanned, the code will be entered using this virtual keyboard at the place where the input focus is currently located.
-To check how it works one may scan the following figure and compare result with the code at the bottom of the figure.
+
+Right after powering on the adapter starts in standby state to save power. In this state the BT is not turned on so the connection to the host computer is impossible. To turn on BT one should press start button once. In case there is no connection to the host for more than 5 minutes the adapter switches to standby mode automatically.
+
+## Testing
+
+To check if adapter works one may scan the following figure and compare result with the code at the bottom of the figure.
 
 <p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/test_qrcode.jpg" />
@@ -63,7 +68,7 @@ The adapter uses on-board RGB LED to indicate its operational status as describe
 | Green pulse   | Scanning completed                   |
 | Cyan pulse    | Control code scanned                 |
 
-## Notes on code integrity and optional checksums
+## Code integrity and optional checksums
 
 The bar-code scanner uses virtual keyboard to transfer code scanned to host computer. Unfortunately the low energy Bluetooth is inherently unreliable. So its possible that some symbols may be lost in transit and not be received by the host. If the host does not validate bar-code it has no means to detect code corruption.
 
@@ -93,7 +98,7 @@ If things go wrong one can try the following steps to recover:
 
 ### Reset adapter
 
-To reset the adapter, press the start button and hold it for more than 1.5 seconds.
+To reset the adapter, press the start button and hold it for more than 1.5 seconds. It will restart in standby state.
 
 ### Reconnect adapter to the host
 
