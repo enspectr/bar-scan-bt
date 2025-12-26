@@ -10,6 +10,9 @@
 #include <esp_mac.h>
 #include <esp_bt.h>
 
+#define VERSION "1.0"
+#define VERSION_INFO "v." VERSION " " __DATE__
+
 // Comment it out to disable LED
 #define RGB_LED 10
 #ifdef RGB_LED
@@ -42,6 +45,7 @@ static bool scan_inited, scan_done;
 static String scan_buff;
 static const String cmd_chsum_on ("jMRMf549y172QLpp");
 static const String cmd_chsum_off("jMRMf549y172QLpq");
+static const String cmd_print_ver("jMRMf549y172QLpv");
 static bool scan_csum_on;
 
 #ifdef RGB_LED
@@ -204,6 +208,21 @@ static inline void enable_csum(bool on)
 	delay(30);
 }
 
+static void print_eol(void)
+{
+	bleKeyboard.press(KEY_RETURN);
+	delay(30);
+	bleKeyboard.release(KEY_RETURN);
+}
+
+static inline void print_version(void)
+{
+	// Bright cyan pulse indicates control code reception
+	led_show_color(RGB_HCYAN);
+	bleKeyboard.print(VERSION_INFO);
+	print_eol();
+}
+
 static inline void flush_buffer(void)
 {
 	if (scan_csum_on)
@@ -211,9 +230,7 @@ static inline void flush_buffer(void)
 	// Bright green pulse indicates scanning completion
 	led_show_color(RGB_HGREEN);
 	bleKeyboard.print(scan_buff);
-	bleKeyboard.press(KEY_RETURN);
-	delay(30);
-	bleKeyboard.release(KEY_RETURN);
+	print_eol();
 }
 
 static void process_barcoder_byte(char c)
@@ -237,6 +254,8 @@ static void process_barcoder_byte(char c)
 					enable_csum(true);
 				else if (scan_buff == cmd_chsum_off)
 					enable_csum(false);
+				else if (scan_buff == cmd_print_ver)
+					print_version();
 				else
 					flush_buffer();
 				scan_done = true;
