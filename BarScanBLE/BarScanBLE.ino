@@ -48,7 +48,7 @@ static const String cmd_chsum_on2("jMRMf549y172QLp~");
 static const String cmd_chsum_off("jMRMf549y172QLpq");
 static const String cmd_print_ver("jMRMf549y172QLpv");
 static bool scan_csum_on;
-static char scan_csum_suff;
+static char scan_csum_sep;
 
 #ifdef RGB_LED
 Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
@@ -104,8 +104,8 @@ void setup()
 	boot_ts = millis();
 
 	config.begin(CFG_NAMESPACE, true);
-	scan_csum_on   = config.getBool("csum_on");
-	scan_csum_suff = config.getInt ("csum_suff");
+	scan_csum_on  = config.getBool("csum_on");
+	scan_csum_sep = config.getInt ("csum_sep");
 	config.end();
 
 	Serial.begin(BAUD_RATE);
@@ -172,8 +172,8 @@ static bool readBtn(void)
 static void save_config(void)
 {
 	config.begin(CFG_NAMESPACE, false);
-	config.putBool("csum_on",   scan_csum_on);
-	config.putInt ("csum_suff", scan_csum_suff);
+	config.putBool("csum_on",  scan_csum_on);
+	config.putInt ("csum_sep", scan_csum_sep);
 	config.end();
 }
 
@@ -199,16 +199,16 @@ static void append_csum(String& s)
 	for (unsigned i = 0; i < s.length(); ++i)
 		sum += (unsigned char)s[i];
 	unsigned const b64mask = ((1 << 6) - 1);
-	if (scan_csum_suff)
-		s += scan_csum_suff;
+	if (scan_csum_sep)
+		s += scan_csum_sep;
 	s += b64symbol((sum >> 6) & b64mask);
 	s += b64symbol(sum & b64mask);
 }
 
-static inline void enable_csum(bool on, char suff = 0)
+static inline void enable_csum(bool on, char sep = 0)
 {
 	scan_csum_on = on;
-	scan_csum_suff = suff;
+	scan_csum_sep = sep;
 	// Bright cyan pulse indicates control code reception
 	led_show_color(RGB_HCYAN);
 	save_config();
