@@ -12,7 +12,6 @@ Scanning completes either after 5 seconds or earlier if the code was scanned suc
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/wiring.gif" />
 </p>
 
-
 ## Building
 
 Use Arduino to compile and flash https://github.com/enspectr/bar-scan-bt/blob/main/BarScanBLE/BarScanBLE.ino
@@ -59,10 +58,25 @@ The adapter uses on-board RGB LED to indicate its operational status as describe
 | Blue          | Adapter is connected to the host     |
 | Magenta pulse | Scanning started                     |
 | Green pulse   | Scanning completed                   |
+| Cyan pulse    | Control code scanned                 |
 
-## Power consumption
+## Notes on code integrity and optional checksums
 
-Total consumption from 5V source together with GM67 module is 60mA in idle state, 240mA while scanning.
+The bar-code scanner uses virtual keyboard to transfer code scanned to host computer. Unfortunately the low energy Bluetooth is inherently unreliable. So its possible that some symbols may be lost in transit and not be received by the host. If the host does not validate bar-code it has no means to detect code corruption.
+
+The scanner has an option to append checksum to the code scanned so that the host will be able to validate it and detect code corruption in transit. The checksum represents the sum of all ASCII codes in the scanned text by modulo 4096. Its encoded as 2 digit number using *[base64 alphabet](https://en.wikipedia.org/wiki/Base64#Alphabet)* and appended to the end of the scanned text.
+
+To enable checksums one should scan the following control code:
+
+<p align="center">
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/csum_on.png" />
+</p>
+
+Once enabled checksums will always be used even after power cycling. To disable checksums one should scan the following control code:
+
+<p align="center">
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/csum_off.png" />
+</p>
 
 ## Troubleshooting
 
@@ -70,9 +84,7 @@ If things go wrong one can try the following steps to recover:
 
 ### Reset adapter
 
-The adapter is able to reset itself in 2 cases:
-* on pressing scan start button white disconnected from the host
-* on long pressing start button
+To reset the adapter, press the start button and hold it for more than 1.5 seconds.
 
 ### Reconnect adapter to the host
 
@@ -86,10 +98,14 @@ This is the method to be used if nothing else have helped. To reset scanner to f
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/default_settings.jpg" />
 </p>
 
-## Implementation notes
+### Finding adapter version
 
-The bar-code scanner uses virtual keyboard to transfer code scanned to host computer. Unfortunately the low energy Bluetooth is inherently unreliable. So its possible that some symbols may be lost in transit and not be received by the host. If the host does not validate bar-code it has no means to detect code corruption.
+If some features don't work the first step to investigate the root cause is finding device software version. Below is a special control code that can be scanned to find out the firmware version and build date.
 
-Yet BT has some means to transmit single message reliably with receiver confirmation. This mechanism is called 'indication'. This indication confirmations were supported in the original bluedroid BT stack. Unfortunately the community is now migrating to NimBLE stack that does not support indication confirmation at all.
+<p align="center">
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/show_version.png" />
+</p>
 
-Note that even in case we could detect single symbol corruption it does not help us to ensure entire code integrity. After loosing some symbol in the middle we are left with partially transmitted code anyway.
+## Power consumption
+
+Total consumption from 5V source together with GM67 module is 60mA in idle state, 240mA while scanning.
