@@ -37,14 +37,14 @@ After switching to host mode the scanner stops continuous scan. Use button on th
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/serial_interface.jpg" />
 </p>
 
-## Operation
+## Theory of operation
 
 The adapter presents scanner as BT keyboard with name started with **EScan** followed by a unique suffix made up of 6 hexadecimal digits.
 Once scanned, the code will be entered using this virtual keyboard at the place where the input focus is currently located.
 
 Right after powering on the adapter starts in standby mode to save power (if its not [disabled explicitly](#disabling-standby)). In this mode the BT is not turned on so the connection to the host computer is impossible. To turn on BT one should press start button once. In case there is no connection to the host for more than 5 minutes the adapter switches to standby mode automatically.
 
-Pressing start button while the adapter is not connected to the host has no effect.
+Pressing start button while the adapter is not connected to the host has no effect unless its pressed twice within 0.7 sec. Ability to start scan with BT not connected may be handy for scanning control codes not intended to be transmitted to the host.
 
 ## Testing
 

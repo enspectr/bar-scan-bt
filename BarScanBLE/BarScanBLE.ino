@@ -25,6 +25,7 @@
 
 #define BTN_PIN 0
 #define BTN_DEBOUNCE_TOUT 50
+#define BTN_DBL_PRESS_TOUT 700
 #define BTN_LONG_PRESS_TOUT 1500
 #define STANDBY_TOUT (300*1000)
 
@@ -91,7 +92,6 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 #define DEV_NAME "EScan"
 
 static BleKeyboard ble_keyboard(DEV_NAME);
-static unsigned    ble_last_connected;
 
 #define CFG_NAMESPACE "BarScanCfg"
 
@@ -126,7 +126,6 @@ static inline void standby_in(void)
 static inline void ble_keyboard_init(void)
 {
 	ble_keyboard.begin();
-	ble_last_connected = millis();
 #ifdef TX_PW_BOOST
 	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, TX_PW_BOOST);
 #endif
@@ -367,20 +366,27 @@ static inline void start_scan(void)
 void loop()
 {
 	static bool btn_pressed;
+	static unsigned last_press;
+	static unsigned last_connected;
 	bool const is_connected = !in_standby && ble_keyboard.isConnected();
 	bool const pressed = readBtn();
+
 	if (pressed && !btn_pressed) {
-		if (millis() - boot_ts > 200) {
-			if (is_connected)
+		unsigned const now = millis();
+		unsigned const boot_margin = 200;
+		if (now - boot_ts > boot_margin) {
+			if (is_connected || (!in_standby && last_press && now - last_press < BTN_DBL_PRESS_TOUT))
 				start_scan();
 			else if (in_standby)
 				standby_out();
+			last_press = now;
 		}
 	}
 	btn_pressed = pressed;
 
 	if (!in_standby)
 	{
+		unsigned const now = millis();
 		// Restart advertising on disconnect
 		if (!is_connected)
 			ble_keyboard.restart_advertising();
@@ -388,8 +394,8 @@ void loop()
 		led_show_color(is_connected ? RGB_BLUE : RGB_YELLOW);
 		// Go to standby if not connected for some time
 		if (is_connected)
-			ble_last_connected = millis();
-		else if (!cfg_no_standby && millis() - ble_last_connected > STANDBY_TOUT)
+			last_connected = now;
+		else if (!cfg_no_standby && last_connected && now - last_connected > STANDBY_TOUT)
 			reset_self();
 		barcoder_wait(10);
 	} else
