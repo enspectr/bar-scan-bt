@@ -104,6 +104,28 @@ static inline void led_show_color(uint32_t c)
 #endif
 }
 
+static inline void standby_in(void)
+{
+#ifdef RGB_LED
+	led_show_color(RGB_OFF);
+#endif
+	in_standby = true;
+}
+
+static inline void ble_keyboard_init(void)
+{
+	ble_keyboard.begin();
+#ifdef TX_PW_BOOST
+	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, TX_PW_BOOST);
+#endif
+}
+
+static inline void standby_out(void)
+{
+	ble_keyboard_init();
+	in_standby = false;
+}
+
 void setup()
 {
 	if (esp_rom_get_reset_reason(0) != 5) {
@@ -144,17 +166,8 @@ void setup()
 		ble_keyboard.set_device_name(bt_dev_name);
 	}
 
+	standby_in();
 	boot_ts = millis();
-	in_standby = true;
-}
-
-static inline void standby_out(void)
-{
-	ble_keyboard.begin();
-	in_standby = false;
-#ifdef TX_PW_BOOST
-	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, TX_PW_BOOST);
-#endif
 }
 
 static void reset_self(void)
@@ -334,17 +347,20 @@ void loop()
 	}
 	btn_pressed = pressed;
 
-	if (!is_connected && !in_standby)
-		ble_keyboard.restart_advertising();
-
-	// Indicate connection status
-	led_show_color(in_standby ? RGB_OFF : is_connected ? RGB_BLUE : RGB_YELLOW);
-
-	static unsigned ble_last_connected;
-	if (is_connected)
-		ble_last_connected = millis();
-	else if (millis() - ble_last_connected > STANDBY_TOUT)
-		reset_self();
-
-	barcoder_wait(10);
+	if (!in_standby)
+	{
+		// Restart advertising on disconnect
+		if (!is_connected)
+			ble_keyboard.restart_advertising();
+		// Indicate connection status
+		led_show_color(is_connected ? RGB_BLUE : RGB_YELLOW);
+		// Go to standby if not connected for some time
+		static unsigned ble_last_connected;
+		if (is_connected)
+			ble_last_connected = millis();
+		else if (millis() - ble_last_connected > STANDBY_TOUT)
+			reset_self();
+		barcoder_wait(10);
+	} else
+		delay(10);
 }
