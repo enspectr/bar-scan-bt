@@ -48,10 +48,10 @@ Pressing start button while the adapter is not connected to the host has no effe
 
 ## Testing
 
-To check if adapter works one may scan the following figure and compare result with the code at the bottom of the figure.
+To check if adapter works one may scan the following 'Hello world!' bar code.
 
 <p align="center">
-  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/test_qrcode.jpg" />
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/hello_world.jpg" />
 </p>
 
 Another quick test is to [query adapter version](#finding-adapter-version).
