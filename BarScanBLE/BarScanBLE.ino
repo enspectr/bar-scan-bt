@@ -42,7 +42,6 @@
 
 #define CSUM_SEPARATOR '~'
 
-static unsigned boot_ts;
 static unsigned cpu_freq;
 static bool     in_standby;
 
@@ -181,8 +180,6 @@ void setup()
 		ble_keyboard_init();
 	else
 		standby_in();
-
-	boot_ts = millis();
 }
 
 static void reset_self(void)
@@ -363,6 +360,8 @@ static inline void start_scan(void)
 
 void loop()
 {
+	static bool booted;
+	static unsigned boot_ts;
 	static bool btn_pressed;
 	static unsigned last_press;
 	static unsigned last_connected;
@@ -370,6 +369,11 @@ void loop()
 	bool const pressed = readBtn();
 	unsigned const now = millis();
 	unsigned const boot_margin = 200;
+
+	if (!booted) {
+		booted = true;
+		boot_ts = now;
+	}
 
 	if (pressed && !btn_pressed) {
 		if (now - boot_ts > boot_margin) {
