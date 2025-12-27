@@ -41,6 +41,7 @@
 #define CSUM_SEPARATOR '~'
 
 static unsigned boot_ts;
+static bool     in_standby;
 
 static const byte barcoder_wake_up[] = {BARCODE_NOP};
 static const byte barcoder_start[] = {START_DECODE, BARCODE_NOP, START_SCAN5S};
@@ -82,7 +83,6 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 #define DEV_NAME "EScan"
 
 static BleKeyboard ble_keyboard(DEV_NAME);
-static bool        ble_keyboard_inited;
 
 #define CFG_NAMESPACE "BarScanCfg"
 
@@ -145,12 +145,13 @@ void setup()
 	}
 
 	boot_ts = millis();
+	in_standby = true;
 }
 
-static inline void ble_keyboard_init(void)
+static inline void standby_out(void)
 {
 	ble_keyboard.begin();
-	ble_keyboard_inited = true;
+	in_standby = false;
 #ifdef TX_PW_BOOST
 	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, TX_PW_BOOST);
 #endif
@@ -238,7 +239,7 @@ static void print_eol(void)
 
 static inline void print_version(void)
 {
-	if (!ble_keyboard_inited)
+	if (in_standby)
 		return;
 	// Bright cyan pulse indicates control code reception
 	led_show_color(RGB_HCYAN);
@@ -248,7 +249,7 @@ static inline void print_version(void)
 
 static inline void flush_buffer(void)
 {
-	if (!ble_keyboard_inited)
+	if (in_standby)
 		return;
 	if (scan_csum_on)
 		append_csum(scan_buff);
@@ -292,7 +293,7 @@ static void process_barcoder_byte(char c)
 #endif
 }
 
-static void wait(unsigned msec)
+static void barcoder_wait(unsigned msec)
 {
 	unsigned const start_ts = millis();
 	static char buff[256];
@@ -314,30 +315,30 @@ static inline void start_scan(void)
 	// Bright magenta pulse indicates scanning start
 	led_show_color(RGB_HMAGENTA);
 	BARCODER_WRITE(barcoder_wake_up);
-	wait(50);
+	barcoder_wait(50);
 	BARCODER_WRITE(barcoder_start);
 }
 
 void loop()
 {
 	static bool btn_pressed;
-	bool const is_connected = ble_keyboard_inited && ble_keyboard.isConnected();
+	bool const is_connected = !in_standby && ble_keyboard.isConnected();
 	bool const pressed = readBtn();
 	if (pressed && !btn_pressed) {
 		if (millis() - boot_ts > 200) {
 			if (is_connected)
 				start_scan();
-			else if (!ble_keyboard_inited)
-				ble_keyboard_init();
+			else if (in_standby)
+				standby_out();
 		}
 	}
 	btn_pressed = pressed;
 
-	if (!is_connected && ble_keyboard_inited)
+	if (!is_connected && !in_standby)
 		ble_keyboard.restart_advertising();
 
 	// Indicate connection status
-	led_show_color(!ble_keyboard_inited ? RGB_OFF : is_connected ? RGB_BLUE : RGB_YELLOW);
+	led_show_color(in_standby ? RGB_OFF : is_connected ? RGB_BLUE : RGB_YELLOW);
 
 	static unsigned ble_last_connected;
 	if (is_connected)
@@ -345,5 +346,5 @@ void loop()
 	else if (millis() - ble_last_connected > STANDBY_TOUT)
 		reset_self();
 
-	wait(10);
+	barcoder_wait(10);
 }
