@@ -51,7 +51,7 @@ Pressing start button while the adapter is not connected to the host has no effe
 To check if adapter works one may scan the following 'Hello world!' bar code.
 
 <p align="center">
-  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/hello_world.jpg" />
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/hello_world.png" />
 </p>
 
 Another quick test is to [query adapter version](#finding-adapter-version).
