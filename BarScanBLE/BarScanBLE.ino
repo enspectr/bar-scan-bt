@@ -41,6 +41,7 @@
 #define CSUM_SEPARATOR '~'
 
 static unsigned boot_ts;
+static unsigned cpu_freq;
 static bool     in_standby;
 
 static const byte barcoder_wake_up[] = {BARCODE_NOP};
@@ -83,6 +84,7 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 #define DEV_NAME "EScan"
 
 static BleKeyboard ble_keyboard(DEV_NAME);
+static unsigned    ble_last_connected;
 
 #define CFG_NAMESPACE "BarScanCfg"
 
@@ -106,15 +108,18 @@ static inline void led_show_color(uint32_t c)
 
 static inline void standby_in(void)
 {
+	cpu_freq = getCpuFrequencyMhz();
 #ifdef RGB_LED
 	led_show_color(RGB_OFF);
 #endif
+	setCpuFrequencyMhz(10);
 	in_standby = true;
 }
 
 static inline void ble_keyboard_init(void)
 {
 	ble_keyboard.begin();
+	ble_last_connected = millis();
 #ifdef TX_PW_BOOST
 	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, TX_PW_BOOST);
 #endif
@@ -122,6 +127,7 @@ static inline void ble_keyboard_init(void)
 
 static inline void standby_out(void)
 {
+	setCpuFrequencyMhz(cpu_freq);
 	ble_keyboard_init();
 	in_standby = false;
 }
@@ -355,12 +361,11 @@ void loop()
 		// Indicate connection status
 		led_show_color(is_connected ? RGB_BLUE : RGB_YELLOW);
 		// Go to standby if not connected for some time
-		static unsigned ble_last_connected;
 		if (is_connected)
 			ble_last_connected = millis();
 		else if (millis() - ble_last_connected > STANDBY_TOUT)
 			reset_self();
 		barcoder_wait(10);
 	} else
-		delay(10);
+		delay(2); // actually it 8x times longer
 }
