@@ -9,6 +9,7 @@
 #include <esp_system.h>
 #include <esp_mac.h>
 #include <esp_bt.h>
+#include <rtc.h>
 
 #define VERSION "1.0"
 #define VERSION_INFO "v." VERSION " " __DATE__
@@ -105,6 +106,14 @@ static inline void led_show_color(uint32_t c)
 
 void setup()
 {
+	if (esp_rom_get_reset_reason(0) != 5) {
+		/* It turns out that esp_restart() does not really reset hardware so it still consumes
+		 * higher current than after power on. The deep sleep trick solves this problem.
+		 */
+		esp_sleep_enable_timer_wakeup(10000); // usec
+		esp_deep_sleep_start();
+	}
+
 	config.begin(CFG_NAMESPACE, true);
 	scan_csum_on  = config.getBool("csum_on");
 	config.end();
