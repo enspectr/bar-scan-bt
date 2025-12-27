@@ -118,4 +118,10 @@ If some features don't work the first step to investigate the root cause is find
 
 ## Power consumption
 
-Total consumption from 5V source together with GM67 module is 33mA in standby mode, 62mA in idle state, 240mA while scanning.
+The following table summarize power consumption from 5V source in various operation modes.
+
+| Operation mode | BT adapter consumption | GM67 module consumption | Total consumption |
+|----------------|------------------------|-------------------------|-------------------|
+| Standby        | 7mA                    | 18mA                    | 25mA              |
+| Idle           | 42mA                   | 18mA                    | 60mA              |
+| Scanning       | 42mA                   | ~200mA                  | ~242mA            |
