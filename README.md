@@ -72,18 +72,12 @@ The adapter uses on-board RGB LED to indicate its operational status as describe
 
 The bar-code scanner uses virtual keyboard to transfer code scanned to host computer. Unfortunately the low energy Bluetooth is inherently unreliable. So its possible that some symbols may be lost in transit and not be received by the host. If the host does not validate bar-code it has no means to detect code corruption.
 
-The scanner has an option to append checksum to the code scanned so that the host will be able to validate it and detect code corruption in transit. The checksum represents the sum of all ASCII codes in the scanned text by modulo 4096. Its encoded as 2 digit number using *[base64 alphabet](https://en.wikipedia.org/wiki/Base64#Alphabet)* and appended to the end of the scanned text.
+The scanner has an option to append checksum to the code scanned so that the host will be able to validate it and detect code corruption in transit. The checksum represents the sum of all ASCII codes in the scanned text by modulo 4096. Its encoded as 2 digit number using *[base64 alphabet](https://en.wikipedia.org/wiki/Base64#Alphabet)* and appended to the end of the scanned text following the ~ separator. The separator allows the host to determine whether the scanned code has a checksum or not, provided that the ~ character is not used in the codes themselves.
 
 To enable checksums one should scan the following control code:
 
 <p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/csum_on.png" />
-</p>
-
-The adapter can optionally separate chechsum from the scanned text by ~ symbol. This will allow the host to determine whether the scanned code has a checksum or not, provided that the ~ character is not used in the codes themselves. To enable checksums with ~ separator one should scan the following control code:
-
-<p align="center">
-  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/csum_on2.png" />
 </p>
 
 Once enabled checksums will always be used even after power cycling. To disable checksums one should scan the following control code:
