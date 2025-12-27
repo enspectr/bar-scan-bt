@@ -46,17 +46,7 @@ Right after powering on the adapter starts in standby mode to save power (if its
 
 Pressing start button while the adapter is not connected to the host has no effect unless its pressed twice within 0.7 sec. Ability to start scan with BT not connected may be handy for scanning control codes not intended to be transmitted to the host.
 
-## Testing
-
-To check if adapter works one may scan the following 'Hello world!' bar code.
-
-<p align="center">
-  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/hello_world.png" />
-</p>
-
-Another quick test is to [query adapter version](#finding-adapter-version).
-
-## LED indicator functions
+### LED indicator functions
 
 The adapter uses on-board RGB LED to indicate its operational status as described in the following table.
 
@@ -69,6 +59,16 @@ The adapter uses on-board RGB LED to indicate its operational status as describe
 | Magenta pulse | Scanning started                     |
 | Green pulse   | Scanning completed                   |
 | Cyan pulse    | Control code scanned                 |
+
+## Testing
+
+To check if adapter works one may scan the following 'Hello world!' bar code.
+
+<p align="center">
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/hello_world.png" />
+</p>
+
+Another quick test is to [query adapter version](#finding-adapter-version).
 
 ## Advanced configuration
 
