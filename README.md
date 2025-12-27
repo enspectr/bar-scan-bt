@@ -127,4 +127,4 @@ The following table summarize power consumption from 5V source in various operat
 | Scanning        | 42mA                   | ~200mA                  | ~242mA            |
 | Scanning with collimation off | 42mA     | ~185mA                  | ~227mA            |
 
-Turning off collimation light beam (red flashing strip) provides marginal power saving in scanning mode. Consult <a id="raw-url" href="https://raw.githubusercontent.com/enspectr/bar-scan-bt/blob/main/doc/GM67_Barcode.pdf">GM67 User manual</a> to see how to do it.
+Turning off collimation light beam (red flashing strip) provides marginal power saving in scanning mode. Consult <a id="raw-url" href="https://github.com/enspectr/bar-scan-bt/blob/main/doc/GM67_Barcode.pdf">GM67 User manual</a> to see how to do it.
