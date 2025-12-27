@@ -49,10 +49,17 @@ static const byte barcoder_start[] = {START_DECODE, BARCODE_NOP, START_SCAN5S};
 
 static bool scan_inited, scan_done;
 static String scan_buff;
-static const String cmd_chsum_on ("jMRMf549y172QLpp");
-static const String cmd_chsum_off("jMRMf549y172QLpq");
-static const String cmd_print_ver("jMRMf549y172QLpv");
-static bool scan_csum_on;
+
+// Command codes:
+static const String cmd_chsum_on   ("jMRMf549y172QLpp");
+static const String cmd_chsum_off  ("jMRMf549y172QLpq");
+static const String cmd_standby_dis("jMRMf549y172QLpr");
+static const String cmd_standby_en ("jMRMf549y172QLps");
+static const String cmd_print_ver  ("jMRMf549y172QLpv");
+
+// Persistent configuration:
+static bool cfg_csum_on;
+static bool cfg_no_standby;
 
 #ifdef RGB_LED
 Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
@@ -62,7 +69,7 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 #endif
 
 #define LED_BRIGHTNESS 2
-#define LED_BRIGHTNESS_HIGH 16
+#define LED_BRIGHTNESS_HIGH 64
 #define BLACK_()     0, 0, 0
 #define RED_(br)     br, 0, 0
 #define GREEN_(br)   0, br, 0
@@ -143,7 +150,8 @@ void setup()
 	}
 
 	config.begin(CFG_NAMESPACE, true);
-	scan_csum_on  = config.getBool("csum_on");
+	cfg_csum_on    = config.getBool("csum_on");
+	cfg_no_standby = config.getBool("no_standby");
 	config.end();
 
 	Serial.begin(BAUD_RATE);
@@ -172,7 +180,11 @@ void setup()
 		ble_keyboard.set_device_name(bt_dev_name);
 	}
 
-	standby_in();
+	if (cfg_no_standby)
+		ble_keyboard_init();
+	else
+		standby_in();
+
 	boot_ts = millis();
 }
 
@@ -209,7 +221,8 @@ static bool readBtn(void)
 static void save_config(void)
 {
 	config.begin(CFG_NAMESPACE, false);
-	config.putBool("csum_on",  scan_csum_on);
+	config.putBool("csum_on",    cfg_csum_on);
+	config.putBool("no_standby", cfg_no_standby);
 	config.end();
 }
 
@@ -242,7 +255,16 @@ static void append_csum(String& s)
 
 static inline void enable_csum(bool on)
 {
-	scan_csum_on = on;
+	cfg_csum_on = on;
+	// Bright cyan pulse indicates control code reception
+	led_show_color(RGB_HCYAN);
+	save_config();
+	delay(30);
+}
+
+static inline void enable_standby(bool en)
+{
+	cfg_no_standby = !en;
 	// Bright cyan pulse indicates control code reception
 	led_show_color(RGB_HCYAN);
 	save_config();
@@ -270,7 +292,7 @@ static inline void flush_buffer(void)
 {
 	if (in_standby)
 		return;
-	if (scan_csum_on)
+	if (cfg_csum_on)
 		append_csum(scan_buff);
 	// Bright green pulse indicates scanning completion
 	led_show_color(RGB_HGREEN);
@@ -299,6 +321,10 @@ static void process_barcoder_byte(char c)
 					enable_csum(true);
 				else if (scan_buff == cmd_chsum_off)
 					enable_csum(false);
+				else if (scan_buff == cmd_standby_dis)
+					enable_standby(false);
+				else if (scan_buff == cmd_standby_en)
+					enable_standby(true);
 				else if (scan_buff == cmd_print_ver)
 					print_version();
 				else

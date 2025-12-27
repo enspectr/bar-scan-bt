@@ -42,7 +42,7 @@ After switching to host mode the scanner stops continuous scan. Use button on th
 The adapter presents scanner as BT keyboard with name started with **EScan** followed by a unique suffix made up of 6 hexadecimal digits.
 Once scanned, the code will be entered using this virtual keyboard at the place where the input focus is currently located.
 
-Right after powering on the adapter starts in standby mode to save power. In this mode the BT is not turned on so the connection to the host computer is impossible. To turn on BT one should press start button once. In case there is no connection to the host for more than 5 minutes the adapter switches to standby mode automatically.
+Right after powering on the adapter starts in standby mode to save power (if its not [disabled explicitly](#disabling-standby)). In this mode the BT is not turned on so the connection to the host computer is impossible. To turn on BT one should press start button once. In case there is no connection to the host for more than 5 minutes the adapter switches to standby mode automatically.
 
 Pressing start button while the adapter is not connected to the host has no effect.
 
@@ -70,7 +70,9 @@ The adapter uses on-board RGB LED to indicate its operational status as describe
 | Green pulse   | Scanning completed                   |
 | Cyan pulse    | Control code scanned                 |
 
-## Code integrity and optional checksums
+## Advanced configuration
+
+### Code integrity and optional checksums
 
 The bar-code scanner uses virtual keyboard to transfer code scanned to host computer. Unfortunately the low energy Bluetooth is inherently unreliable. So its possible that some symbols may be lost in transit and not be received by the host. If the host does not validate bar-code it has no means to detect code corruption.
 
@@ -88,13 +90,27 @@ Once enabled checksums will always be used even after power cycling. To disable 
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/csum_off.png" />
 </p>
 
+### Disabling standby
+
+The standby mode provides more than 2x power saving while the scanner is idle. Yet having to wake it up from standby may be inconvenient if its used frequently. User can disable standby mode by scanning the following control code:
+
+<p align="center">
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/standby_dis.png" />
+</p>
+
+Once disabled standby mode will not be used even after power cycling. To enable it back one should scan the following control code:
+
+<p align="center">
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/standby_en.png" />
+</p>
+
 ## Troubleshooting
 
 If things go wrong one can try the following steps to recover:
 
 ### Reset adapter
 
-To reset the adapter, press the start button and hold it for more than 1.5 seconds. It will restart in standby mode.
+To reset the adapter, press the start button and hold it for more than 1.5 seconds. It will restart in standby mode (if its not [disabled explicitly](#disabling-standby)).
 
 ### Reconnect adapter to the host
 
@@ -102,7 +118,7 @@ Sometimes scan codes are not being delivered to the host while the connection is
 
 ### Reset adapter to factory defaults
 
-This is the method to be used if nothing else have helped. To reset scanner to factory defaults using the following control code and repeat [configuration procedure](#initial-configuration-steps).
+This is the method to be used if nothing else have helped. To reset scanner to factory defaults using the following control code and repeat [initial configuration procedure](#initial-configuration-steps).
 
 <p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/default_settings.jpg" />
