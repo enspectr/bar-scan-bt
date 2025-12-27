@@ -185,14 +185,14 @@ void setup()
 static void reset_self(void)
 {
 	// Bright red pulse indicates reset
-	led_show_color(RGB_HRED);
+	if (!in_standby)
+		led_show_color(RGB_HRED);
 	esp_restart();
 }
 
 static void long_press_handler(void)
 {
-	if (!in_standby)
-		reset_self();
+	reset_self();
 }
 
 static bool read_btn(void)
