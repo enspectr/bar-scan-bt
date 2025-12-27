@@ -389,7 +389,7 @@ void loop()
 		// Go to standby if not connected for some time
 		if (is_connected)
 			ble_last_connected = millis();
-		else if (millis() - ble_last_connected > STANDBY_TOUT)
+		else if (!cfg_no_standby && millis() - ble_last_connected > STANDBY_TOUT)
 			reset_self();
 		barcoder_wait(10);
 	} else
