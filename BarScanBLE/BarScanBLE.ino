@@ -1,8 +1,9 @@
-//
-// Start barcode scanning on button press,
-// get barcode from GM67 reader and print it to USB CDC
-// and transmit to the connect host as BLE keyboard
-//
+/*
+ * BT adapter for GM67 barcode scanner
+ *
+ * (C) 2025-2026 EnSpectr Inc. http://enspectr.com
+ * Author: Oleg Volkov <olegv142@gmail.com>
+ */
 
 #include <Preferences.h>
 #include <BleKeyboard.h>
@@ -59,6 +60,8 @@ static const String cmd_standby_en ("jMRMf549y172QLps");
 static const String cmd_print_ver  ("jMRMf549y172QLpv");
 
 // Persistent configuration:
+#define CFG_NAMESPACE "BarScanCfg"
+static Preferences config;
 static bool cfg_csum_on;
 static bool cfg_no_standby;
 
@@ -90,12 +93,7 @@ Adafruit_NeoPixel pixels(1, RGB_LED, NEO_GRB + NEO_KHZ800);
 // #define DUMP_HEX
 
 #define DEV_NAME "EScan"
-
 static BleKeyboard ble_keyboard(DEV_NAME);
-
-#define CFG_NAMESPACE "BarScanCfg"
-
-static Preferences config;
 
 static inline char hex_digit(uint8_t v)
 {
@@ -370,15 +368,17 @@ void loop()
 	static unsigned last_connected;
 	bool const is_connected = !in_standby && ble_keyboard.isConnected();
 	bool const pressed = readBtn();
+	unsigned const now = millis();
+	unsigned const boot_margin = 200;
 
 	if (pressed && !btn_pressed) {
-		unsigned const now = millis();
-		unsigned const boot_margin = 200;
 		if (now - boot_ts > boot_margin) {
 			if (is_connected || (!in_standby && last_press && now - last_press < BTN_DBL_PRESS_TOUT))
 				start_scan();
-			else if (in_standby)
+			else if (in_standby) {
 				standby_out();
+				last_connected = now;
+			}
 			last_press = now;
 		}
 	}
@@ -386,7 +386,6 @@ void loop()
 
 	if (!in_standby)
 	{
-		unsigned const now = millis();
 		// Restart advertising on disconnect
 		if (!is_connected)
 			ble_keyboard.restart_advertising();
@@ -395,7 +394,7 @@ void loop()
 		// Go to standby if not connected for some time
 		if (is_connected)
 			last_connected = now;
-		else if (!cfg_no_standby && last_connected && now - last_connected > STANDBY_TOUT)
+		else if (!cfg_no_standby && now - last_connected > STANDBY_TOUT)
 			reset_self();
 		barcoder_wait(10);
 	} else
