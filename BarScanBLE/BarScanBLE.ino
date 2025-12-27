@@ -191,10 +191,11 @@ static void reset_self(void)
 
 static void long_press_handler(void)
 {
-	reset_self();
+	if (!in_standby)
+		reset_self();
 }
 
-static bool readBtn(void)
+static bool read_btn(void)
 {
 	static bool btn_pressed;
 	static unsigned first_pressed, last_pressed;
@@ -366,7 +367,7 @@ void loop()
 	static unsigned last_press;
 	static unsigned last_connected;
 	bool const is_connected = !in_standby && ble_keyboard.isConnected();
-	bool const pressed = readBtn();
+	bool const pressed = read_btn();
 	unsigned const now = millis();
 	unsigned const boot_margin = 200;
 
