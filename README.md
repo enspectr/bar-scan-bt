@@ -24,7 +24,11 @@ https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32
 Then go to Boards Manager and install **esp32 by Espressif Systems**. The code is tested with version 3.0.7.
 Before building the adapter the following libraries should be installed:
 1. The NimBLE stack https://github.com/h2zero/NimBLE-Arduino. The simplest way to do it is by using Arduino libraries manager.
-2. The virtual keyboard library https://github.com/enspectr/ESP32-BLE-Keyboard. One can either check it out from github to the Arduino libraries folder or download it as [zip-file](https://github.com/enspectr/ESP32-BLE-Keyboard/archive/refs/heads/master.zip) and add it to the project by menu *Sketch/Include Library/Add .ZIP Library...*
+2. The virtual keyboard library https://github.com/enspectr/ESP32-BLE-Keyboard. One can either check it out from github to the Arduino libraries folder or download it as [zip-file](https://github.com/enspectr/ESP32-BLE-Keyboard/archive/refs/heads/master.zip) and add it to the project by using menu *Sketch/Include Library/Add .ZIP Library...*
+The following options are recommended:
+* Board: ESP32C3 Dev Module
+* USB CDC On Boot: Disabled
+* CPU Frequency: 80MHz
 
 ## Initial configuration steps
 
@@ -138,7 +142,7 @@ If some features don't work the first step to investigate the root cause is find
 
 ## Power consumption
 
-The following table summarize power consumption from 5V source in various operation modes.
+The following table summarizes power consumption from 5V source in various operation modes for the GM67 and adapter built with 80MHz CPU frequency setting.
 
 | Operation mode  | BT adapter consumption | GM67 module consumption | Total consumption |
 |-----------------|------------------------|-------------------------|-------------------|
