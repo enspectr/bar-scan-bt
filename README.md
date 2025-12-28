@@ -76,7 +76,7 @@ Another quick test is to [query adapter version](#finding-adapter-version).
 
 ### Code integrity and optional checksums
 
-The bar-code scanner uses virtual keyboard to transfer code scanned to host computer. Unfortunately the low energy Bluetooth is inherently unreliable. So its possible that some symbols may be lost in transit and not be received by the host. If the host does not validate bar-code it has no means to detect code corruption.
+The bar-code scanner uses virtual keyboard to transfer code scanned to host computer. Unfortunately the low energy Bluetooth is inherently unreliable. So its possible that some symbols may be lost in transit and not be received by the host. If the host does not validate bar-code it has no means to detect code corruption. Another common source of code corruptions is using wrong keyboard layout. Since the scanner transmits the code by simulating a keyboard, using the wrong layout can change the code without the user being aware of it.
 
 The scanner has an option to append checksum to the code scanned so that the host will be able to validate it and detect code corruption in transit. The checksum represents the sum of all ASCII codes in the scanned text by modulo 4096. Its encoded as 2 digit number using *[base64 alphabet](https://en.wikipedia.org/wiki/Base64#Alphabet)* and appended to the end of the scanned text following the ~ separator. The separator allows the host to determine whether the scanned code has a checksum or not, provided that the ~ character is not used in the codes themselves.
 
