@@ -1,7 +1,7 @@
 # bar-scan-bt
 **BT adapter for GM67 bar code scanner**
 
-Its using ESP32 and https://github.com/enspectr/ESP32-BLE-Keyboard for communicating with the host.
+Its using ESP32 to implement BLE virtual keyboard for communicating with the host.
 
 This document describes firmware version 1.0.
 
