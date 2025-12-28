@@ -120,7 +120,7 @@ Sometimes scan codes are not being delivered to the host while the connection is
 
 ### Reset adapter to factory defaults
 
-This is the method to be used if nothing else have helped. To reset scanner to factory defaults using the following control code and repeat [initial configuration procedure](#initial-configuration-steps).
+This is the method to be used if nothing else have helped. To reset scanner to factory defaults use the following control code and repeat [initial configuration procedure](#initial-configuration-steps).
 
 <p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/default_settings.jpg" />
