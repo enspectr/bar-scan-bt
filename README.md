@@ -22,7 +22,9 @@ To be able to build this code add the following to Arduino Additional board mana
 https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 ```
 Then go to Boards Manager and install **esp32 by Espressif Systems**. The code is tested with version 3.0.7.
-The implementation is using NimBLE stack https://github.com/h2zero/NimBLE-Arduino
+Before building the adapter the following libraries should be installed:
+1. The NimBLE stack https://github.com/h2zero/NimBLE-Arduino. The simplest way to do it is by using Arduino libraries manager.
+2. The virtual keyboard library https://github.com/enspectr/ESP32-BLE-Keyboard. One can either check it out from github to the Arduino libraries folder or download it as [zip-file](https://github.com/enspectr/ESP32-BLE-Keyboard/archive/refs/heads/master.zip) and add it to the project by menu *Sketch/Include Library/Add .ZIP Library...*
 
 ## Initial configuration steps
 
