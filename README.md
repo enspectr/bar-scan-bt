@@ -7,8 +7,7 @@ This document describes firmware version 1.0.
 
 ## Wiring
 
-The following figure shows connections to ESP32C3Zero module used as a controller. Pressing the START button starts scanning.
-Scanning completes either after 5 seconds or earlier if the code was scanned successfully.
+The following figure shows connections to ESP32C3Zero module used as a controller.
 
 <p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/wiring.gif" />
@@ -53,7 +52,7 @@ Once scanned, the code will be entered using this virtual keyboard at the place 
 
 Right after powering on the adapter starts in standby mode to save power (if its not [disabled explicitly](#disabling-standby)). In this mode the BT is not turned on so the connection to the host computer is impossible. To turn on BT one should press start button once. In case there is no connection to the host for more than 5 minutes the adapter switches to standby mode automatically.
 
-Pressing start button while the adapter is not connected to the host has no effect unless its pressed twice within 0.7 sec. Ability to start scan with BT not connected may be handy for scanning control codes not intended to be transmitted to the host.
+Pressing start button while the adapter is not connected to the host has no effect unless its pressed twice within 0.7 sec. Ability to start scan with BT not connected may be handy for scanning control codes not intended to be transmitted to the host. Scanning completes either after 5 seconds or earlier if the code was scanned successfully.
 
 ### LED indicator functions
 
