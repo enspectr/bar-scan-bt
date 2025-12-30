@@ -39,7 +39,7 @@ controller out of the box. There are two control codes that should be scanned on
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/host_mode.jpg" />
 </p>
 
-After switching to host mode the scanner stops continuous scan. Use button on the module board to scan the following code.
+After switching to host mode the scanner stops continuous scan. Use button on the GM67 module board to scan the following code.
 
 <p align="center">
   <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/serial_interface.jpg" />
