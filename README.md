@@ -22,6 +22,7 @@ Then go to Boards Manager and install **esp32 by Espressif Systems**. The code i
 Before building the adapter the following libraries should be installed:
 1. The NimBLE stack https://github.com/h2zero/NimBLE-Arduino. The simplest way to do it is by using Arduino libraries manager.
 2. The virtual keyboard library https://github.com/enspectr/ESP32-BLE-Keyboard. One can either check it out from github to the Arduino libraries folder or download it as [zip-file](https://github.com/enspectr/ESP32-BLE-Keyboard/archive/refs/heads/master.zip) and add it to the project by using menu *Sketch/Include Library/Add .ZIP Library...*
+3. Adafruit NeoPixel library (available via Arduino libraries manager).
 
 The following build options are recommended:
 * Board: ESP32C3 Dev Module
