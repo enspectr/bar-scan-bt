@@ -28,7 +28,8 @@
 #define BTN_DEBOUNCE_TOUT 50
 #define BTN_DBL_PRESS_TOUT 700
 #define BTN_LONG_PRESS_TOUT 1500
-#define STANDBY_TOUT (300*1000)
+#define STANDBY_TOUT (600*1000)
+#define STANDBY_TOUT_INI (120*1000)
 
 #define BarcodeSerial Serial1
 #define TX_PIN 1
@@ -45,6 +46,8 @@
 
 static unsigned cpu_freq;
 static bool     in_standby;
+static unsigned last_connected;
+static unsigned standby_tout = STANDBY_TOUT_INI;
 
 static const byte barcoder_wake_up[] = {BARCODE_NOP};
 static const byte barcoder_start[] = {AUTO_LIGHT, BARCODE_NOP, START_DECODE, BARCODE_NOP, START_SCAN5S};
@@ -169,7 +172,7 @@ void setup()
 		ble_keyboard.set_device_name(bt_dev_name);
 	}
 
-	if (cfg_no_standby)
+	if (cfg_no_standby || esp_rom_get_reset_reason(0) != 5)
 		ble_keyboard_init();
 	else
 		standby_in();
@@ -361,7 +364,6 @@ void loop()
 	static unsigned boot_ts;
 	static bool btn_pressed;
 	static unsigned last_press;
-	static unsigned last_connected;
 	bool const is_connected = !in_standby && ble_keyboard.isConnected();
 	bool const pressed = read_btn();
 	unsigned const now = millis();
@@ -393,9 +395,11 @@ void loop()
 		// Indicate connection status
 		led_show_color(is_connected ? RGB_BLUE : RGB_YELLOW);
 		// Go to standby if not connected for some time
-		if (is_connected)
+		if (is_connected) {
 			last_connected = now;
-		else if (!cfg_no_standby && now - last_connected > STANDBY_TOUT)
+			standby_tout = STANDBY_TOUT;
+		}
+		else if (!cfg_no_standby && now - last_connected > standby_tout)
 			reset_self();
 		barcoder_wait(10);
 	} else
