@@ -138,14 +138,6 @@ static inline void standby_out(void)
 
 void setup()
 {
-	if (esp_rom_get_reset_reason(0) != 5) {
-		/* It turns out that esp_restart() does not really reset hardware so it still consumes
-		 * higher current than after power on. The deep sleep trick solves this problem.
-		 */
-		esp_sleep_enable_timer_wakeup(10000); // usec
-		esp_deep_sleep_start();
-	}
-
 	config.begin(CFG_NAMESPACE, true);
 	cfg_csum_on    = config.getBool("csum_on");
 	cfg_no_standby = config.getBool("no_standby");
@@ -188,7 +180,10 @@ static void reset_self(void)
 	// Bright red pulse indicates reset
 	if (!in_standby)
 		led_show_color(RGB_HRED);
-	esp_restart();
+	// It turns out that esp_restart() does not really reset hardware so it still consumes
+	// higher current than after power on. The deep sleep trick solves this problem.
+	esp_sleep_enable_timer_wakeup(10000); // usec
+	esp_deep_sleep_start();
 }
 
 static void long_press_handler(void)
