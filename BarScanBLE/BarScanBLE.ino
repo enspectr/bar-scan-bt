@@ -24,7 +24,8 @@
 // Comment it out to keep default power level
 #define TX_PW_BOOST ESP_PWR_LVL_P18
 
-#define BTN_PIN 0
+#define BTN_PIN  0
+#define BTEN_PIN 4
 #define BTN_DEBOUNCE_TOUT 50
 #define BTN_DBL_PRESS_TOUT 700
 #define BTN_LONG_PRESS_TOUT 1500
@@ -45,6 +46,7 @@
 #define CSUM_SEPARATOR '~'
 
 static unsigned cpu_freq;
+static bool     offline_mode;
 static bool     in_standby;
 static unsigned last_connected;
 static unsigned standby_tout = STANDBY_TOUT_INI;
@@ -124,6 +126,23 @@ static inline void standby_in(void)
 	in_standby = true;
 }
 
+static inline void ble_init_device_name(void)
+{
+	uint8_t mac[8] = {0};
+	if (ESP_OK == esp_efuse_mac_get_default(mac))
+	{
+		std::string bt_dev_name(DEV_NAME);
+		uint8_t sig[] = {(uint8_t)(mac[0] ^ mac[3]), (uint8_t)(mac[1] ^ mac[4]), (uint8_t)(mac[2] ^ mac[5])};
+		bt_dev_name += hex_digit(sig[0] >> 4);
+		bt_dev_name += hex_digit(sig[0] & 0xf);
+		bt_dev_name += hex_digit(sig[1] >> 4);
+		bt_dev_name += hex_digit(sig[1] & 0xf);
+		bt_dev_name += hex_digit(sig[2] >> 4);
+		bt_dev_name += hex_digit(sig[2] & 0xf);
+		ble_keyboard.set_device_name(bt_dev_name);
+	}
+}
+
 static inline void ble_keyboard_init(void)
 {
 	ble_keyboard.begin();
@@ -150,7 +169,14 @@ void setup()
 	BarcodeSerial.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
 	BarcodeSerial.setTimeout(10);
 
-	pinMode(BTN_PIN, INPUT_PULLUP);
+	pinMode(BTN_PIN,  INPUT_PULLUP);
+	pinMode(BTEN_PIN, INPUT_PULLUP);
+
+	delay(10);
+
+	offline_mode = !digitalRead(BTEN_PIN);
+	if (offline_mode)
+		cfg_no_standby = true;
 
 #ifdef RGB_LED
 	pixels.begin();
@@ -158,23 +184,12 @@ void setup()
 	delay(50);
 #endif
 
-	uint8_t mac[8] = {0};
-	if (ESP_OK == esp_efuse_mac_get_default(mac))
-	{
-		std::string bt_dev_name(DEV_NAME);
-		uint8_t sig[] = {(uint8_t)(mac[0] ^ mac[3]), (uint8_t)(mac[1] ^ mac[4]), (uint8_t)(mac[2] ^ mac[5])};
-		bt_dev_name += hex_digit(sig[0] >> 4);
-		bt_dev_name += hex_digit(sig[0] & 0xf);
-		bt_dev_name += hex_digit(sig[1] >> 4);
-		bt_dev_name += hex_digit(sig[1] & 0xf);
-		bt_dev_name += hex_digit(sig[2] >> 4);
-		bt_dev_name += hex_digit(sig[2] & 0xf);
-		ble_keyboard.set_device_name(bt_dev_name);
-	}
-
-	if (cfg_no_standby || esp_rom_get_reset_reason(0) != 5)
-		ble_keyboard_init();
-	else
+	if (cfg_no_standby || esp_rom_get_reset_reason(0) != 5) {
+		if (!offline_mode) {
+			ble_init_device_name();
+			ble_keyboard_init();
+		}
+	} else
 		standby_in();
 }
 
@@ -249,6 +264,11 @@ static void append_csum(String& s)
 
 static inline void enable_csum(bool on)
 {
+	if (offline_mode) {
+		led_show_color(RGB_HRED);
+		delay(30);
+		return;
+	}
 	cfg_csum_on = on;
 	// Bright cyan pulse indicates control code reception
 	led_show_color(RGB_HCYAN);
@@ -258,6 +278,11 @@ static inline void enable_csum(bool on)
 
 static inline void enable_standby(bool en)
 {
+	if (offline_mode) {
+		led_show_color(RGB_HRED);
+		delay(30);
+		return;
+	}
 	cfg_no_standby = !en;
 	// Bright cyan pulse indicates control code reception
 	led_show_color(RGB_HCYAN);
@@ -265,7 +290,7 @@ static inline void enable_standby(bool en)
 	delay(30);
 }
 
-static void print_eol(void)
+static inline void print_eol(void)
 {
 	ble_keyboard.press(KEY_RETURN);
 	delay(30);
@@ -278,6 +303,10 @@ static inline void print_version(void)
 		return;
 	// Bright cyan pulse indicates control code reception
 	led_show_color(RGB_HCYAN);
+	if (offline_mode) {
+		delay(30);
+		return;
+	}
 	ble_keyboard.print(VERSION_INFO);
 	print_eol();
 }
@@ -290,6 +319,10 @@ static inline void flush_buffer(void)
 		append_csum(scan_buff);
 	// Bright green pulse indicates scanning completion
 	led_show_color(RGB_HGREEN);
+	if (offline_mode) {
+		delay(30);
+		return;
+	}
 	ble_keyboard.print(scan_buff);
 	print_eol();
 }
@@ -364,7 +397,7 @@ void loop()
 	static unsigned boot_ts;
 	static bool btn_pressed;
 	static unsigned last_press;
-	bool const is_connected = !in_standby && ble_keyboard.isConnected();
+	bool const is_connected = !in_standby && !offline_mode && ble_keyboard.isConnected();
 	bool const pressed = read_btn();
 	unsigned const now = millis();
 	unsigned const boot_margin = 200;
@@ -376,7 +409,7 @@ void loop()
 
 	if (pressed && !btn_pressed) {
 		if (now - boot_ts > boot_margin) {
-			if (is_connected || (!in_standby && last_press && now - last_press < BTN_DBL_PRESS_TOUT))
+			if (is_connected || offline_mode || (!in_standby && last_press && now - last_press < BTN_DBL_PRESS_TOUT))
 				start_scan();
 			else if (in_standby) {
 				standby_out();
@@ -390,7 +423,7 @@ void loop()
 	if (!in_standby)
 	{
 		// Restart advertising on disconnect
-		if (!is_connected)
+		if (!is_connected && !offline_mode)
 			ble_keyboard.restart_advertising();
 		// Indicate connection status
 		led_show_color(is_connected ? RGB_BLUE : RGB_YELLOW);
