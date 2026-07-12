@@ -12,7 +12,7 @@
 #include <esp_bt.h>
 #include <rtc.h>
 
-#define VERSION "1.0"
+#define VERSION "1.1"
 #define VERSION_INFO "v." VERSION " " __DATE__
 
 // Comment it out to disable LED
@@ -35,6 +35,7 @@
 #define BarcodeSerial Serial1
 #define TX_PIN 1
 #define RX_PIN 3
+#define NRDY_PIN 5
 #define BAUD_RATE 9600
 
 #define BARCODE_NOP  0x00
@@ -165,18 +166,24 @@ void setup()
 	cfg_no_standby = config.getBool("no_standby");
 	config.end();
 
+#ifdef DUMP_HEX
 	Serial.begin(BAUD_RATE);
+#endif
 	BarcodeSerial.begin(BAUD_RATE, SERIAL_8N1, RX_PIN, TX_PIN);
 	BarcodeSerial.setTimeout(10);
 
 	pinMode(BTN_PIN,  INPUT_PULLUP);
 	pinMode(BTEN_PIN, INPUT_PULLUP);
+	pinMode(NRDY_PIN, OUTPUT);
+	digitalWrite(NRDY_PIN, LOW);
 
 	delay(10);
 
 	offline_mode = !digitalRead(BTEN_PIN);
-	if (offline_mode)
+	if (offline_mode) {
 		cfg_no_standby = true;
+		Serial0.begin(BAUD_RATE);
+	}
 
 #ifdef RGB_LED
 	pixels.begin();
@@ -315,6 +322,11 @@ static inline void flush_buffer(void)
 {
 	if (in_standby)
 		return;
+	if (offline_mode) {
+		String keystrokes(scan_buff);
+		keystrokes += '\r';
+		Serial0.write(keystrokes.c_str(), keystrokes.length());
+	}
 	if (cfg_csum_on)
 		append_csum(scan_buff);
 	// Bright green pulse indicates scanning completion
@@ -336,7 +348,6 @@ static void process_barcoder_byte(char c)
 #else
 	static char last_byte;
 	if (scan_inited) {
-		Serial.write(c);
 		if (!scan_done) {
 			if (c != 0xA && c != 0xD)
 				scan_buff += c;
