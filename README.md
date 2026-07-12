@@ -167,4 +167,4 @@ The additional pins definitions are listed in the following table.
 |---------|--------------------------------------------------------------------------------------|
 | BTEN    | Low level on startup disables Bluetooth and activates serial output (TXD). The pin is pulled up internally so leaving it floating enables Bluetooth operation.  |
 | TXD     | If Bluetooth is disabled the scanned text is output at this pin at 9600 baud rate followed by \r symbol (with code 13).                                         |
-| nRDY    | This pin is set to low level after firmware startup. By pulling it up one can create reset signal (active high) for external circuit receiving data from TXD ping.<br>Such reset signal is necessary since firmware is used to print debug messages to TXD at startup.
+| nRDY    | This pin is set to low level after firmware startup. By pulling it up one can create reset signal (active high) for external circuit receiving data from TXD ping. Such reset signal is necessary since firmware is used to print debug messages to TXD at startup.
