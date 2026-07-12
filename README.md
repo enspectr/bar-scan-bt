@@ -1,7 +1,7 @@
 # BT adapter for GM67 bar code scanner
 Its using ESP32 to implement BLE virtual keyboard for communicating with the host.
 
-This document describes firmware version 1.0.
+This document describes firmware version 1.1.
 
 ## Wiring
 
@@ -153,3 +153,23 @@ The following table summarizes power consumption from 5V source in various opera
 | Scanning with collimation off | 42mA     | ~185mA                  | ~227mA            |
 
 Turning off collimation light beam (red flashing strip) provides marginal power saving in scanning mode. Consult [GM67 User manual](https://github.com/enspectr/bar-scan-bt/blob/main/doc/GM67_Barcode.pdf) to see how to do it.
+
+## Dual mode usage
+
+The adapter has several additional pins that can be used to switch between Bluetooth and serial (or USB HID with additional adapter chip) communication channels. They are shown on the following figure.
+
+<p align="center">
+  <img src="https://github.com/enspectr/bar-scan-bt/blob/main/doc/wiring2.gif" />
+</p>
+
+The additional pins definitions are listed in the following table.
+| Pin     |  Description                                                                         |
+|---------|--------------------------------------------------------------------------------------|
+| BTEN    | Low level on startup disables Bluetooth and activates serial output (TXD).           |
+|         | The pin is pulled up internally so leaving it floating enables Bluetooth operation.  |
+| TXD     | If Bluetooth is disabled the scanned text is output at this pin at 9600 baud rate    |
+|         | followed by \r symbol (with code 13).                                                |
+| nRDY    | This pin is set to low level after firmware startup. By pulling it up one can create |
+|         | reset signal (active high) for external circuit receiving data from TXD ping. Such   |
+|         | reset signal is necessary since firmware is used to print debug messages to TXD at   |
+|         | startup.                                                                             |
