@@ -14,6 +14,7 @@
 
 #define VERSION "1.1"
 #define VERSION_INFO "v." VERSION " " __DATE__
+#define STRZ_LEN(s) (sizeof(s) / sizeof(*(s)) - 1)
 
 // Comment it out to disable LED
 #define RGB_LED 10
@@ -311,7 +312,8 @@ static inline void print_version(void)
 	// Bright cyan pulse indicates control code reception
 	led_show_color(RGB_HCYAN);
 	if (offline_mode) {
-		delay(30);
+		Serial0.write(VERSION_INFO, STRZ_LEN(VERSION_INFO));
+		Serial0.write('\r');
 		return;
 	}
 	ble_keyboard.print(VERSION_INFO);
@@ -322,19 +324,15 @@ static inline void flush_buffer(void)
 {
 	if (in_standby)
 		return;
-	if (offline_mode) {
-		String keystrokes(scan_buff);
-		keystrokes += '\r';
-		Serial0.write(keystrokes.c_str(), keystrokes.length());
-	}
-	if (cfg_csum_on)
-		append_csum(scan_buff);
 	// Bright green pulse indicates scanning completion
 	led_show_color(RGB_HGREEN);
 	if (offline_mode) {
-		delay(30);
+		Serial0.write(scan_buff.c_str(), scan_buff.length());
+		Serial0.write('\r');
 		return;
 	}
+	if (cfg_csum_on)
+		append_csum(scan_buff);
 	ble_keyboard.print(scan_buff);
 	print_eol();
 }
