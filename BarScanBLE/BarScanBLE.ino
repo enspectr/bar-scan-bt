@@ -36,7 +36,8 @@
 #define BarcodeSerial Serial1
 #define TX_PIN 1
 #define RX_PIN 3
-#define NRDY_PIN 5
+#define RDY_PIN 5
+#define RDY_LVL LOW
 #define BAUD_RATE 9600
 
 #define BARCODE_NOP  0x00
@@ -175,8 +176,8 @@ void setup()
 
 	pinMode(BTN_PIN,  INPUT_PULLUP);
 	pinMode(BTEN_PIN, INPUT_PULLUP);
-	pinMode(NRDY_PIN, OUTPUT);
-	digitalWrite(NRDY_PIN, LOW);
+	pinMode(RDY_PIN, OUTPUT);
+	digitalWrite(RDY_PIN, RDY_LVL);
 
 	delay(10);
 
