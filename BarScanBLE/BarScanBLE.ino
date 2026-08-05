@@ -37,7 +37,7 @@
 #define TX_PIN 1
 #define RX_PIN 3
 #define RDY_PIN 5
-#define RDY_LVL LOW
+#define RDY_LVL HIGH
 #define BAUD_RATE 9600
 
 #define BARCODE_NOP  0x00
